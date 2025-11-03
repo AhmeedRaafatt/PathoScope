@@ -5,20 +5,13 @@
 
 HemaPath LIS is a comprehensive, web-based Laboratory Information System (LIS). It is designed to manage two distinct clinical workflows in a single, unified platform: **numerical data analysis (Hematology)** and **advanced medical imaging (Digital Pathology)**.
 
-[cite_start]This system is built to enhance efficiency and diagnostic accuracy by providing a patient-facing portal for results, a full-featured administrative backend for lab technicians, and a powerful, AI-assisted diagnostic viewer for pathologists[cite: 3, 23, 24].
-
-## 🎓 Course Project
-
-This system is the final deliverable for the **Healthcare System Project (HCIS)**. [cite_start]The project's goal is to design and develop a unique healthcare solution that encompasses patient management, billing, scheduling, and advanced clinical diagnostic support[cite: 1, 3, 4].
-
-* **Instructors:** Dr. Eman Ayman, Eng. [cite_start]Yara Elshamy [cite: 46, 47]
-* [cite_start]**Phase 0 Deadline:** November 7, 2025 [cite: 48]
+This system is built to enhance efficiency and diagnostic accuracy by providing a patient-facing portal for results, a full-featured administrative backend for lab technicians, and a powerful, AI-assisted diagnostic viewer for pathologists.
 
 ---
 
 ## ✨ Key Features
 
-### [cite_start]1. Role-Based Access Control [cite: 8-10]
+### 1. Role-Based Access Control
 
 The system provides secure, distinct interfaces for four unique user roles:
 
@@ -27,15 +20,15 @@ The system provides secure, distinct interfaces for four unique user roles:
 * **Lab Technician (Clinical Staff):** Manages the core LIS dashboard, including sample accessioning, patient scheduling, and entering numerical test results.
 * **Pathologist (Clinical Staff):** A specialized role with access to a diagnostic queue and the advanced DICOM viewer for case analysis and sign-off.
 
-### [cite_start]2. Patient Portal [cite: 11]
+### 2. Patient Portal
 
 A secure, patient-facing web application with full self-service capabilities:
 
-* [cite_start]**Profile Management:** Patient registration and profile management[cite: 12].
-* [cite_start]**Appointment Scheduling:** A self-service calendar for booking sample collection times[cite: 13].
+* **Profile Management:** Patient registration and profile management.
+* **Appointment Scheduling:** A self-service calendar for booking sample collection times.
 * **Unified Results Dashboard:** A single page to view and access the status and reports for all tests (both Hematology and Pathology).
-* [cite_start]**Medical History:** Access to past lab reports and diagnoses[cite: 14].
-* [cite_start]**Billing & Payments:** View itemized invoices and process payments[cite: 16].
+* **Medical History:** Access to past lab reports and diagnoses.
+* **Billing & Payments:** View itemized invoices and process payments.
 
 ### 3. Core LIS (Clinical Staff Portal)
 
@@ -50,16 +43,16 @@ The operational backend for managing all lab workflows:
 Manages the workflow for tests that produce numerical data (e.g., Complete Blood Count).
 
 * **Numerical Data Entry:** A simple interface for technicians to input results from analyzers.
-* [cite_start]**Rule-Based CDSS:** Provides "intelligent diagnostic support" by automatically flagging results that fall outside of pre-defined normal ranges[cite: 23].
+* **Rule-Based CDSS:** Provides "intelligent diagnostic support" by automatically flagging results that fall outside of pre-defined normal ranges.
 
 ### 5. Digital Pathology Module (Imaging Data)
 
 The system's most advanced module for analyzing whole-slide images (WSI) in DICOM format.
 
-* [cite_start]**Advanced DICOM Viewer:** An interactive, web-based viewer for digital pathology slides, featuring all required tools like zoom, pan, rotate, and contrast adjustment[cite: 26, 27].
-* [cite_start]**AI-Powered CDSS:** An integrated module that uses **TensorFlow/PyTorch** machine learning models to provide "intelligent diagnostic support"[cite: 23, 24, 39]. Pathologists can run AI analysis to automatically count cells or highlight potential regions of interest.
-* [cite_start]**Multiplanar Reconstruction (MPR):** Enables users to view Z-stack (multi-slice) images in multiple planes (axial, sagittal, coronal)[cite: 29].
-* [cite_start]**3D Volume Rendering:** Provides a 3D representation of the tissue sample for detailed analysis[cite: 30].
+* **Advanced DICOM Viewer:** An interactive, web-based viewer for digital pathology slides, featuring all required tools like zoom, pan, rotate, and contrast adjustment.
+* **AI-Powered CDSS:** An integrated module that uses **TensorFlow/PyTorch** machine learning models to provide "intelligent diagnostic support". Pathologists can run AI analysis to automatically count cells or highlight potential regions of interest.
+* **Multiplanar Reconstruction (MPR):** Enables users to view Z-stack (multi-slice) images in multiple planes (axial, sagittal, coronal).
+* **3D Volume Rendering:** Provides a 3D representation of the tissue sample for detailed analysis.
 
 ---
 
@@ -71,10 +64,10 @@ This project is built on a modern, decoupled web stack.
 | :--- | :--- | :--- |
 | **Backend** | **Django (Python)** | A high-level framework for rapid, secure backend development. Manages all user data, business logic, and API endpoints. |
 | **Frontend** | **React.js** | A JavaScript library for building the entire user interface, including the Patient Portal and Clinical Staff dashboards. |
-| **Database** | **PostgreSQL** | [cite_start]A powerful, open-source relational database to store all patient data, appointments, and test results[cite: 40]. |
-| **DICOM (Backend)**| **PyDICOM** | [cite_start]A Python library for parsing and handling DICOM files on the server[cite: 39]. |
+| **Database** | **PostgreSQL** | A powerful, open-source relational database to store all patient data, appointments, and test results. |
+| **DICOM (Backend)**| **PyDICOM** | A Python library for parsing and handling DICOM files on the server. |
 | **DICOM (Frontend)**| **Cornerstone.js / VTK.js** | JavaScript libraries for building the in-browser, high-performance DICOM viewer. |
-| **AI / CDSS** | **TensorFlow / PyTorch** | [cite_start]Deep learning frameworks for running the machine learning models that power the CDSS module[cite: 39]. |
+| **AI / CDSS** | **TensorFlow / PyTorch** | Deep learning frameworks for running the machine learning models that power the CDSS module. |
 
 ---
 
