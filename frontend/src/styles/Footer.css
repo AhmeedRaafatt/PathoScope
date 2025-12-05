@@ -1,0 +1,39 @@
+footer{
+    padding-block: 20px;
+    background-color: #122056;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap:35px;
+}
+footer > section{
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr;
+    column-gap: 10px;
+    align-items: center;
+    border-bottom: 1px solid white;
+
+}
+section > div{
+    display: flex;
+    flex-direction: column;
+    gap:10px;
+    margin-bottom: 20px;
+}
+img{
+    width:50%;
+}
+ul{
+    list-style-type: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+h3{
+    font-size: 25px;
+}
+.social-icon{
+    font-size: 200%;
+}
