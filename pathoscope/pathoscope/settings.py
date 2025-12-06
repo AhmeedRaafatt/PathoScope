@@ -41,8 +41,15 @@ INSTALLED_APPS = [
     'rest_framework',           # For the API
     'rest_framework.authtoken', # For Sign In Tokens
     'accounts',                 # Your new app
+    'patient_portal',
     'corsheaders'
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
