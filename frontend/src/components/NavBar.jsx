@@ -14,7 +14,7 @@ export default function NavBar (){
             <a href="#contact" className="section-link">Contact</a>
             <div className="login-buttons">
                 <NavLink to="./login" className={({isActive})=>isActive ? "login-btn active" :"login-btn"}>Patient Login</NavLink>
-                <NavLink to="./login" className={()=>{return "login-btn"}}>Staff Login</NavLink>
+                <NavLink to="./register" className={()=>{return "login-btn"}}>Staff Login</NavLink>
             </div>
         </nav>
         </header>
