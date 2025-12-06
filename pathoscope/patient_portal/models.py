@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 User = get_user_model()
 
@@ -92,3 +94,23 @@ class Invoice(models.Model):
     
     def __str__(self):
         return f"Invoice {self.id} - {self.patient.username}"
+    
+
+@receiver(post_save, sender=TestOrder)
+def create_test_invoice(sender, instance, created, **kwargs):
+    """
+    Automatically creates an Invoice whenever a new TestOrder is created.
+    """
+    if created:
+        price = 0.00
+        if instance.test_type == TestOrder.HEMATOLOGY:
+            price = 50.00
+        elif instance.test_type == TestOrder.PATHOLOGY:
+            price = 150.00
+        
+        Invoice.objects.create(
+            patient=instance.patient,
+            test_order=instance,
+            amount=price,
+            payment_status=Invoice.UNPAID
+        )
