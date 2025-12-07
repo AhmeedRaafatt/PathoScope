@@ -83,7 +83,6 @@ export default function LandingPage(){
             
             
         </section>
-        <Footer/>
         </>
     )
 }

@@ -1,86 +1,88 @@
-import React, { useState } from 'react';
+import { Form, Link, redirect } from "react-router-dom"
+import '../../styles/Login.css'
 
-const RegisterPage = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    role: 'patient' // Default role
-  });
+export async function action({ request }) {
+  const formData = await request.formData()
+  const username = formData.get("username")
+  const email = formData.get("email")
+  const password = formData.get("password")
+  const role = formData.get("role")
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/auth/signup/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, email, password, role }),
     });
-  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // connecting to your Django Backend
-      const response = await fetch('http://127.0.0.1:8000/api/auth/signup/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+    const data = await response.json();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert("Registration Successful! Please Login.");
-        console.log("Created User:", data);
-        // Navigate to login here if you have routing set up
-      } else {
-        alert("Error: " + JSON.stringify(data));
-      }
-    } catch (error) {
-      console.error("Network Error:", error);
-      alert("Could not connect to Django server.");
+    if (response.ok) {
+      console.log("Registration successful:", data);
+      return redirect('/login');
+      
+    } else {
+      return { 
+        error: data.username?.[0] || data.email?.[0] || data.password?.[0] || "Registration failed. Please try again.",
+        details: data,
+        status: response.status 
+      };
     }
-  };
+  } catch (error) {
+    console.error("Network Error:", error);
+    return { 
+      error: "Could not connect to server. Please try again.",
+      networkError: true 
+    };
+  }
+}
 
+export default function RegisterPage() {
   return (
-    <div style={{ padding: '50px' }}>
-      <h2>Sign Up</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', width: '300px' }}>
-        <input 
-          name="username" 
-          placeholder="Username" 
-          onChange={handleChange} 
-          style={{ marginBottom: '10px', padding: '10px' }}
-        />
-        <input 
-          name="email" 
-          placeholder="Email" 
-          type="email" 
-          onChange={handleChange} 
-          style={{ marginBottom: '10px', padding: '10px' }}
-        />
-        <input 
-          name="password" 
-          placeholder="Password" 
-          type="password" 
-          onChange={handleChange} 
-          style={{ marginBottom: '10px', padding: '10px' }}
-        />
-        
-        <label>Select Role:</label>
-        <select name="role" onChange={handleChange} style={{ marginBottom: '20px', padding: '10px' }}>
-          <option value="patient">Patient</option>
-          <option value="lab_tech">Lab Technician</option>
-          <option value="pathologist">Pathologist</option>
-          <option value="admin">Admin</option>
-        </select>
-
-        <button type="submit" style={{ padding: '10px', backgroundColor: '#4CAF50', color: 'white' }}>
-          Register
-        </button>
-      </form>
-    </div>
-  );
-};
-
-export default RegisterPage;
+    <main className="register">
+      <h1>Sign Up</h1>
+      <Form method="post" replace>
+        <label>
+          Username :
+          <input 
+            type="text" 
+            name="username" 
+            required
+            placeholder="Choose a username"
+          />
+        </label>
+        <label>
+          Email :
+          <input 
+            type="email" 
+            name="email" 
+            required
+            placeholder="Enter your email"
+          />
+        </label>
+        <label>
+          Password : 
+          <input 
+            type="password" 
+            name="password" 
+            required
+            placeholder="Create a password"
+          />
+        </label>
+        <label>
+          Select Role : 
+          <select name="role" defaultValue="patient">
+            <option value="patient">Patient</option>
+            <option value="lab_tech">Lab Technician</option>
+            <option value="pathologist">Pathologist</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <Link to="/login">Already have an account? Login</Link>
+        <button type="submit">Register</button>
+      </Form>
+    </main>
+  )
+}

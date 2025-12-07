@@ -1,0 +1,209 @@
+/* Login and Register Page Container */
+.login, .register {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #eeeffd 0%, #FAFAFD 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative background elements */
+.login::before, .register::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(91, 101, 220, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.login::after, .register::after {
+    content: "";
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(134, 143, 245, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* Header with Logo */
+.login > header {
+    margin-bottom: 1.5rem;
+    z-index: 10;
+}
+
+.login > header img {
+    width: 200px;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.login > header img:hover {
+    transform: scale(1.05);
+}
+
+/* Main Heading */
+.login > h1, .register > h1 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 2rem;
+    z-index: 5;
+    position: relative;
+}
+
+/* Form Container */
+.login Form, .register Form {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%);
+    border-radius: 20px;
+    padding: 50px 60px;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 5;
+    
+    /* Beautiful box shadow matching service cards */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 
+                0 8px 16px rgba(0, 0, 0, 0.04),
+                0 12px 24px rgba(91, 101, 220, 0.08);
+    
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login Form:hover, .register Form:hover {
+    box-shadow: 0 12px 24px rgba(91, 101, 220, 0.12),
+                0 20px 40px rgba(91, 101, 220, 0.08),
+                0 0 0 1px rgba(91, 101, 220, 0.1);
+    transform: translateY(-4px);
+}
+
+/* Label Styling */
+.login Form label, .register Form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+/* Input Fields and Select */
+.login Form input, .register Form input,
+.register Form select {
+    padding: 14px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    color: #2d3748;
+    background-color: #ffffff;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.login Form input:focus, .register Form input:focus,
+.register Form select:focus {
+    border-color: #5B65DC;
+    box-shadow: 0 0 0 3px rgba(91, 101, 220, 0.1);
+    background-color: #ffffff;
+}
+
+.login Form input::placeholder, .register Form input::placeholder {
+    color: #94a3b8;
+}
+
+/* Select dropdown specific styling */
+.register Form select {
+    cursor: pointer;
+}
+
+.register Form select option {
+    padding: 10px;
+}
+
+/* Link to Register/Login */
+.login Form a, .register Form a {
+    color: #5B65DC;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+}
+
+.login Form a:hover, .register Form a:hover {
+    color: #868ff5;
+    text-decoration: underline;
+}
+
+/* Submit Button */
+.login Form button, .register Form button {
+    margin-top: 1rem;
+    padding: 14px 30px;
+    background: linear-gradient(135deg, #5B65DC 0%, #868ff5 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(91, 101, 220, 0.25);
+}
+
+.login Form button:hover, .register Form button:hover {
+    background: linear-gradient(135deg, #4954c7 0%, #7078e8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(91, 101, 220, 0.35);
+}
+
+.login Form button:active, .register Form button:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(91, 101, 220, 0.25);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login > h1, .register > h1 {
+        font-size: 2rem;
+    }
+    
+    .login Form, .register Form {
+        padding: 40px 30px;
+        max-width: 100%;
+    }
+    
+    .login > header img {
+        width: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login, .register {
+        padding: 20px 15px;
+    }
+    
+    .login > h1, .register > h1 {
+        font-size: 1.75rem;
+    }
+    
+    .login Form, .register Form {
+        padding: 30px 25px;
+    }
+    
+    .login > header img {
+        width: 140px;
+    }
+}
