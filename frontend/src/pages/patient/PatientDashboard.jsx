@@ -71,7 +71,7 @@ export default function PatientDashboard() {
         order.status === 'Report Ready' || order.status === 'Complete'
     ).length;
 
-    // Payment handler
+    // Payment handler with data refresh
     const handlePayment = async (invoiceId) => {
         try {
             const token = localStorage.getItem('token');
@@ -85,8 +85,12 @@ export default function PatientDashboard() {
 
             if (response.ok) {
                 alert('Payment successful!');
-                // Reload data or update context here
-                window.location.reload();
+                // Refresh data from parent context
+                if (context?.refreshData) {
+                    await context.refreshData();
+                } else {
+                    window.location.reload();
+                }
             } else {
                 alert('Payment failed. Please try again.');
             }
@@ -143,7 +147,7 @@ export default function PatientDashboard() {
                             <FontAwesomeIcon icon={faCalendarCheck} className="section-icon" />
                             Upcoming Appointments
                         </h2>
-                        <Link to="/patient/appoinments" className="view-all-link">
+                        <Link to="/patient/appointments" className="view-all-link">
                             View All
                             <FontAwesomeIcon icon={faChevronRight} />
                         </Link>
@@ -273,7 +277,7 @@ export default function PatientDashboard() {
                     <p className="empty-message">
                         You don't have any recent activity. Book an appointment to get started!
                     </p>
-                    <Link to="/patient/appoinments" className="btn-primary">
+                    <Link to="/patient/appointments/book" className="btn-primary">
                         Book Appointment
                     </Link>
                 </section>

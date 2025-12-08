@@ -27,8 +27,8 @@ export default function PatientSidebar() {
                     <p className="feature-name">Dashboard</p>
                 </Link>
                 <Link 
-                    to="appoinments" 
-                    className={`sidebar-feature ${location.pathname === '/patient/appoinments' ? 'active' : ''}`}
+                    to="appointments" 
+                    className={`sidebar-feature ${location.pathname === '/patient/appointments' ? 'active' : ''}`}
                 >
                     <FontAwesomeIcon icon={faCalendarCheck} className="feature-icon" />
                     <p className="feature-name">Appointments</p>
@@ -55,12 +55,6 @@ export default function PatientSidebar() {
                             className={`sub-feature ${location.pathname === '/patient/results/pathology' ? 'active' : ''}`}
                         >
                             <p>Pathology Reports</p>
-                        </Link>
-                        <Link 
-                            to="results/slides"
-                            className={`sub-feature ${location.pathname === '/patient/results/slides' ? 'active' : ''}`}
-                        >
-                            <p>Digital Slides Viewer</p>
                         </Link>
                     </div>
                 </div>
