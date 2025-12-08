@@ -134,4 +134,11 @@ AUTH_USER_MODEL = 'accounts.User'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:5175",
+    "http://127.0.0.1:5175",
 ]
+
+# Allow credentials (tokens/cookies) to be sent in cross-origin requests during development
+CORS_ALLOW_CREDENTIALS = True

@@ -1,6 +1,6 @@
 import { Form, Link, redirect } from "react-router-dom"
 import '../../styles/Login.css'
-
+import logo from "../../assets/logo.png"
 export async function action({ request }) {
   const formData = await request.formData()
   const username = formData.get("username")
@@ -22,7 +22,7 @@ export async function action({ request }) {
       localStorage.setItem('username', data.username);
       localStorage.setItem('role', data.role);
       console.log("Login successful:", data);
-      return redirect('/'); 
+      return redirect('/patient'); 
       
     } else {
       return { 
@@ -42,6 +42,7 @@ export async function action({ request }) {
 export default function LoginPage() {
   return (
     <main className="login">
+      <img src={logo}/>
       <h1>Login</h1>
       <Form method="post" replace>
         <label>
