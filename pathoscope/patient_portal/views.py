@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from django.utils import timezone
-from .models import PatientProfile, Appointment, TestOrder, Invoice
+from .models import PatientProfile, Appointment, TestOrder, Invoice, TEST_PRICES
 from .serializers import PatientProfileSerializer, AppointmentSerializer, TestOrderSerializer, InvoiceSerializer
 
 
@@ -16,6 +16,13 @@ class PatientProfileView(generics.RetrieveUpdateAPIView):
         return profile
 
 
+class AvailableTestsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        return Response(TEST_PRICES)
+
+
 class AppointmentListCreateView(generics.ListCreateAPIView):
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
@@ -24,14 +31,61 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
         return Appointment.objects.filter(patient=self.request.user)
     
     def perform_create(self, serializer):
-        serializer.save(patient=self.request.user)
+        appointment = serializer.save(patient=self.request.user, status=Appointment.CONFIRMED)
+        
+        # Create test orders and invoice when appointment is confirmed
+        test_type = appointment.test_type
+        selected_tests = appointment.selected_tests
+        
+        total_amount = 0
+        invoice_items = []
+        
+        for test_name in selected_tests:
+            price = TEST_PRICES[test_type][test_name]
+            
+            # Create TestOrder
+            TestOrder.objects.create(
+                patient=self.request.user,
+                appointment=appointment,
+                test_type=test_type,
+                test_name=test_name,
+                price=price
+            )
+            
+            total_amount += price
+            invoice_items.append({'test_name': test_name, 'price': float(price)})
+        
+        # Create Invoice
+        Invoice.objects.create(
+            patient=self.request.user,
+            appointment=appointment,
+            amount=total_amount,
+            items=invoice_items
+        )
+
+
+class CancelAppointmentView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, appointment_id):
+        try:
+            appointment = Appointment.objects.get(id=appointment_id, patient=request.user)
+            
+            if appointment.status == Appointment.COMPLETED:
+                return Response({'error': 'Cannot cancel completed appointment'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            appointment.status = Appointment.CANCELLED
+            appointment.save()
+            
+            return Response({'message': 'Appointment cancelled successfully'}, status=status.HTTP_200_OK)
+        except Appointment.DoesNotExist:
+            return Response({'error': 'Appointment not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class AvailableSlotsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Placeholder: Return sample available dates
         import datetime
         today = datetime.date.today()
         available_dates = [

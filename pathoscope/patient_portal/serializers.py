@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import PatientProfile, Appointment, TestOrder, Invoice
+from .models import PatientProfile, Appointment, TestOrder, Invoice, TEST_PRICES
 
 
 class PatientProfileSerializer(serializers.ModelSerializer):
@@ -14,8 +14,8 @@ class PatientProfileSerializer(serializers.ModelSerializer):
 class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
-        fields = ['id', 'patient', 'date', 'time', 'reason', 'status', 'notes']
-        read_only_fields = ['patient', 'status'] # Ensure patient can't fake status
+        fields = ['id', 'patient', 'date', 'time', 'test_type', 'selected_tests', 'status', 'notes']
+        read_only_fields = ['patient', 'status']
 
     def validate(self, data):
         """
@@ -24,13 +24,24 @@ class AppointmentSerializer(serializers.ModelSerializer):
         appointment_date = data.get('date')
         appointment_time = data.get('time')
 
-        # Check if ANY appointment exists at this exact date and time
-        # We exclude 'cancelled' appointments because those slots are free again
         if Appointment.objects.filter(
             date=appointment_date, 
             time=appointment_time
         ).exclude(status='cancelled').exists():
             raise serializers.ValidationError("This time slot is already booked. Please choose another time.")
+
+        # Validate selected tests
+        test_type = data.get('test_type')
+        selected_tests = data.get('selected_tests', [])
+        
+        if not selected_tests:
+            raise serializers.ValidationError("Please select at least one test.")
+        
+        # Validate that selected tests exist in TEST_PRICES
+        available_tests = TEST_PRICES.get(test_type, {}).keys()
+        for test in selected_tests:
+            if test not in available_tests:
+                raise serializers.ValidationError(f"Invalid test: {test}")
 
         return data
 
@@ -38,12 +49,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
 class TestOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestOrder
-        fields = ['id', 'test_type', 'test_name', 'order_date', 'status', 'report_url', 'slide_url']
+        fields = ['id', 'test_type', 'test_name', 'order_date', 'status', 'report_url', 'slide_url', 'price']
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    test_name = serializers.CharField(source='test_order.test_name', read_only=True)
-    
     class Meta:
         model = Invoice
-        fields = ['id', 'test_name', 'amount', 'payment_status', 'created_date', 'paid_date']
+        fields = ['id', 'amount', 'payment_status', 'created_date', 'paid_date', 'items']

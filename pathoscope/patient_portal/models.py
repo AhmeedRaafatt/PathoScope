@@ -1,7 +1,5 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 User = get_user_model()
 
@@ -17,24 +15,50 @@ class PatientProfile(models.Model):
         return f"Profile of {self.user.username}"
 
 
+# Test pricing dictionary
+TEST_PRICES = {
+    'hematology': {
+        'CBC': 50.00,
+        'RBC Count': 100.00,
+        'WBC Count': 80.00,
+        'Hemoglobin': 60.00,
+        'Platelet Count': 70.00,
+        'Blood Glucose': 40.00,
+    },
+    'pathology': {
+        'Tissue Biopsy': 150.00,
+        'Fine Needle Aspiration': 200.00,
+        'Bone Marrow Biopsy': 300.00,
+        'Skin Biopsy': 120.00,
+    }
+}
+
+
 class Appointment(models.Model):
-    PENDING = 'pending'
     CONFIRMED = 'confirmed'
     COMPLETED = 'completed'
     CANCELLED = 'cancelled'
     
     STATUS_CHOICES = [
-        (PENDING, 'Pending'),
         (CONFIRMED, 'Confirmed'),
         (COMPLETED, 'Completed'),
         (CANCELLED, 'Cancelled'),
     ]
     
+    HEMATOLOGY = 'hematology'
+    PATHOLOGY = 'pathology'
+    
+    TEST_TYPE_CHOICES = [
+        (HEMATOLOGY, 'Hematology'),
+        (PATHOLOGY, 'Pathology'),
+    ]
+    
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointments')
     date = models.DateField()
     time = models.TimeField()
-    reason = models.CharField(max_length=200, default='Sample Collection')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    test_type = models.CharField(max_length=20, choices=TEST_TYPE_CHOICES, default='hematology')
+    selected_tests = models.JSONField(default=list)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=CONFIRMED)
     notes = models.TextField(blank=True)
     
     def __str__(self):
@@ -63,12 +87,14 @@ class TestOrder(models.Model):
     ]
     
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='test_orders')
+    appointment = models.ForeignKey(Appointment, on_delete=models.SET_NULL, null=True, blank=True, related_name='test_orders')
     test_type = models.CharField(max_length=20, choices=TEST_TYPE_CHOICES)
     test_name = models.CharField(max_length=100)
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
-    report_url = models.CharField(max_length=500, blank=True)  # For PDF reports
-    slide_url = models.CharField(max_length=500, blank=True)  # For DICOM viewer
+    report_url = models.CharField(max_length=500, blank=True)
+    slide_url = models.CharField(max_length=500, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     
     def __str__(self):
         return f"{self.patient.username} - {self.test_name}"
@@ -86,31 +112,12 @@ class Invoice(models.Model):
     ]
     
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='invoices')
-    test_order = models.ForeignKey(TestOrder, on_delete=models.CASCADE, related_name='invoices')
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='invoices', null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default=UNPAID)
     created_date = models.DateTimeField(auto_now_add=True)
     paid_date = models.DateTimeField(null=True, blank=True)
+    items = models.JSONField(default=list)  # Store list of {test_name, price}
     
     def __str__(self):
         return f"Invoice {self.id} - {self.patient.username}"
-    
-
-@receiver(post_save, sender=TestOrder)
-def create_test_invoice(sender, instance, created, **kwargs):
-    """
-    Automatically creates an Invoice whenever a new TestOrder is created.
-    """
-    if created:
-        price = 0.00
-        if instance.test_type == TestOrder.HEMATOLOGY:
-            price = 50.00
-        elif instance.test_type == TestOrder.PATHOLOGY:
-            price = 150.00
-        
-        Invoice.objects.create(
-            patient=instance.patient,
-            test_order=instance,
-            amount=price,
-            payment_status=Invoice.UNPAID
-        )
