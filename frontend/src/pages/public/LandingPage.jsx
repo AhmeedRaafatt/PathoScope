@@ -1,5 +1,4 @@
 import NavBar from "../../components/NavBar";
-import  Footer from "../../components/Footer";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarCheck } from '@fortawesome/free-solid-svg-icons';
@@ -12,17 +11,19 @@ import aboutHeroImage from "../../assets/aboutHeroImage.png";
 import { NavLink } from "react-router-dom";
 import "../../styles/LandingPage.css"
 
+const LandingAnimation = () => {
+    return (
+      <DotLottieReact
+        src="https://lottie.host/71d3c67c-533e-4d76-a80a-7f1a7e178e7c/kCG4AdwZjd.lottie"
+        loop
+        autoplay
+      />
+    );
+  };
+  
 
 export default function LandingPage(){
-    const LandingAnimation = () => {
-    return (
-    <DotLottieReact
-      src="https://lottie.host/71d3c67c-533e-4d76-a80a-7f1a7e178e7c/kCG4AdwZjd.lottie"
-      loop
-      autoplay
-    />
-    );
-   };
+    
 
     return(
         <>

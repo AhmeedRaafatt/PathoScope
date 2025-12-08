@@ -1,0 +1,17 @@
+.auth-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .auth-header {
+    padding: 1rem;
+  }
+  .auth-header img {
+    height: 40px;
+  }
+  .auth-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
