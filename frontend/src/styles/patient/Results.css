@@ -1,0 +1,705 @@
+/* ============================================
+   RESULTS CONTAINER
+   ============================================ */
+
+.results-container {
+  width: 100%;
+  padding:1rem;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.results-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding:10px 30px;
+}
+
+.results-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #122056;
+  margin: 0 0 0.5rem 0;
+}
+
+.results-subtitle {
+  color: #6b7280;
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* ============================================
+   NAVIGATION TABS
+   ============================================ */
+
+.results-nav {
+  display: flex;
+  justify-content: flex-start;
+  gap: 2.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 2rem;
+}
+
+.results-nav .nav-link {
+  position: relative;
+  padding: 1rem 2rem;
+  color: #6b7280;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.results-nav .nav-link:hover {
+  color: #5B65DC;
+  background-color: #f9fafb;
+}
+
+.results-nav .nav-link.active {
+  color: #5B65DC;
+  border-bottom-color: #5B65DC;
+}
+
+/* ============================================
+   CONTENT AREA
+   ============================================ */
+
+.results-content {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.results-view {
+  width: 100%;
+}
+
+/* ============================================
+   TEST LIST & CARDS
+   ============================================ */
+
+.test-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.test-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.test-card:hover {
+  box-shadow: 0 4px 12px rgba(91, 101, 220, 0.08);
+  border-color: #d1d5db;
+}
+
+/* Card Header */
+.test-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.test-card-header:hover {
+  background-color: #f9fafb;
+}
+
+.test-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.test-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: #eeeffd;
+  color: #5B65DC;
+}
+
+.test-icon-wrapper.hematology {
+  background-color: #eeeffd;
+  color: #5B65DC;
+}
+
+.test-icon-wrapper.pathology {
+  background-color: #eeeffd;
+  color: #5B65DC;
+}
+
+.test-details {
+  flex: 1;
+}
+
+.test-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #122056;
+  margin: 0 0 0.25rem 0;
+}
+
+.test-date {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.test-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge.ready {
+  background-color: #eeeffd;
+  color: #5B65DC;
+}
+
+.status-badge.pending {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.expand-btn:hover {
+  background-color: #f3f4f6;
+  color: #122056;
+}
+
+/* ============================================
+   CARD CONTENT (EXPANDED)
+   ============================================ */
+
+.test-card-content {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  background-color: #fafafa;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+/* ============================================
+   HEMATOLOGY TABLE
+   ============================================ */
+
+.results-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.results-table thead {
+  background-color: #f9fafb;
+}
+
+.results-table th {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #122056;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.results-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.results-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.results-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.results-table tbody tr.abnormal {
+  background-color: #fef2f2;
+}
+
+.param-name {
+  font-weight: 500;
+  color: #122056;
+}
+
+.param-value {
+  font-weight: 600;
+  color: #122056;
+}
+
+.param-status .status-normal {
+  color: #059669;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.param-status .status-abnormal {
+  color: #dc2626;
+  font-weight: 500;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ============================================
+   PATHOLOGY CONTENT
+   ============================================ */
+
+.pathology-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.content-section {
+  padding: 1.25rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #122056;
+  margin: 0 0 0.5rem 0;
+}
+
+.section-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.no-data {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ============================================
+   ACTION BUTTONS
+   ============================================ */
+
+.action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-download,
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-download,
+.btn-action.primary {
+  background-color: #5B65DC;
+  color: white;
+}
+
+.btn-download:hover,
+.btn-action.primary:hover {
+  background-color: #122056;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(91, 101, 220, 0.2);
+}
+
+.btn-action.secondary {
+  background-color: white;
+  color: #5B65DC;
+  border: 1px solid #5B65DC;
+}
+
+.btn-action.secondary:hover {
+  background-color: #eeeffd;
+}
+
+/* ============================================
+   STATES
+   ============================================ */
+
+.processing-state {
+  padding: 2rem;
+  text-align: center;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.processing-state p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.empty-state {
+  padding: 4rem 2rem;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.empty-icon {
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #122056;
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-state p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+  .results-nav {
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .results-nav .nav-link {
+    padding: 1rem 1.25rem;
+    white-space: nowrap;
+  }
+
+  .test-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .test-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .results-table-wrapper {
+    overflow-x: scroll;
+  }
+
+  .results-table {
+    min-width: 600px;
+  }
+
+  .pathology-content {
+    gap: 1rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn-download,
+  .btn-action {
+    width: 100%;
+    justify-content: center;
+  }
+}
+/* ============================================
+   ALL RESULTS - FILTERS
+   ============================================ */
+
+.results-filters {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #122056;
+  min-width: 100px;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: #5B65DC;
+  color: #5B65DC;
+  background-color: #f9fafb;
+}
+
+.filter-btn.active {
+  background-color: #5B65DC;
+  color: white;
+  border-color: #5B65DC;
+}
+
+/* ============================================
+   ALL RESULTS - SUMMARY
+   ============================================ */
+
+.results-summary {
+  margin-bottom: 1rem;
+}
+
+.results-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.results-count strong {
+  color: #122056;
+  font-weight: 600;
+}
+
+/* ============================================
+   ALL RESULTS - TEST NAME ROW
+   ============================================ */
+
+.test-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.test-type-label {
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.test-type-label.hematology {
+  background-color: #eeeffd;
+  color: #5B65DC;
+}
+
+.test-type-label.pathology {
+  background-color: #eeeffd;
+  color: #5B65DC;
+}
+
+/* ============================================
+   ALL RESULTS - CONTENT
+   ============================================ */
+
+.all-results-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #122056;
+}
+
+.all-results-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.no-actions {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+/* ============================================
+   RESPONSIVE - FILTERS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .results-filters {
+    padding: 1rem;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .filter-label {
+    min-width: auto;
+  }
+
+  .filter-buttons {
+    width: 100%;
+  }
+
+  .filter-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .all-results-actions {
+    flex-direction: column;
+  }
+
+  .btn-action {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .test-name-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

@@ -1,6 +1,6 @@
 import { Form, Link, redirect } from "react-router-dom"
 import '../../styles/Login.css'
-
+import logo from "../../assets/logo.png"
 export async function action({ request }) {
   const formData = await request.formData()
   const username = formData.get("username")
@@ -42,6 +42,7 @@ export async function action({ request }) {
 export default function RegisterPage() {
   return (
     <main className="register">
+      <img src={logo}/>
       <h1>Sign Up</h1>
       <Form method="post" replace>
         <label>

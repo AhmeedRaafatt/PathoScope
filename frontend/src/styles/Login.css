@@ -10,6 +10,9 @@
     position: relative;
     overflow: hidden;
 }
+img{
+    width:400px;
+}
 
 /* Decorative background elements */
 .login::before, .register::before {
