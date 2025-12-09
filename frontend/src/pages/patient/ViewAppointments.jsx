@@ -1,39 +1,14 @@
-import React from 'react';
-import { useOutletContext, Form } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { Calendar, Clock } from 'lucide-react';
 import '../../styles/patient/Appoinments.css'
 
-export async function action({ request }) {
-  const formData = await request.formData();
-  const appointmentId = formData.get('appointmentId');
-  const token = localStorage.getItem('token');
-  
-  try {
-    const response = await fetch(
-      `http://127.0.0.1:8000/api/patient-portal/appointments/${appointmentId}/`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to cancel appointment');
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error('Error canceling appointment:', error);
-    return { error: 'Failed to cancel appointment' };
-  }
-}
-
 const ViewAppointments = () => {
   const context = useOutletContext();
-  
+  const [showModal, setShowModal] = useState(false);
+  const [toCancelId, setToCancelId] = useState(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
   // Extract appointments array from context
   // Handle both direct array and object with results property
   const appointmentsData = context?.appointments?.results || context?.appointments || [];
@@ -69,11 +44,41 @@ const ViewAppointments = () => {
     }
   ];
 
-  const handleCancel = (appointmentId) => {
-    if (!window.confirm('Are you sure you want to cancel this appointment?')) {
-      return false;
+  const handleCancelClick = (appointmentId) => {
+    setCancelError('');
+    setToCancelId(appointmentId);
+    setShowModal(true);
+  };
+
+  const confirmCancel = async () => {
+    if (!toCancelId) return;
+    setIsCancelling(true);
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/patient-portal/appointments/${toCancelId}/cancel/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        setCancelError(err?.error || err?.detail || 'Failed to cancel appointment');
+        setIsCancelling(false);
+        return;
+      }
+
+      // refresh parent data if available
+      if (context?.refreshData) await context.refreshData();
+      setShowModal(false);
+      setToCancelId(null);
+    } catch (e) {
+      console.error('Cancel error', e);
+      setCancelError('Network error while cancelling.');
+    } finally {
+      setIsCancelling(false);
     }
-    return true;
   };
 
   return (
@@ -97,11 +102,14 @@ const ViewAppointments = () => {
                     <Calendar size={20} />
                   </div>
                   <div className="appointment-details">
-                    <h3>{apt.reason}</h3>
+                    <h3>{apt.test_type ? apt.test_type.replace('_', ' ') : (apt.reason || 'Appointment')}</h3>
                     <p className="appointment-datetime">
                       <Clock size={14} />
                       {apt.date} at {apt.time?.slice(0, 5) || 'N/A'}
                     </p>
+                    {apt.selected_tests && apt.selected_tests.length > 0 && (
+                      <p className="appointment-notes"><strong>Tests:</strong> {apt.selected_tests.join(', ')}</p>
+                    )}
                     {apt.notes && <p className="appointment-notes">Note: {apt.notes}</p>}
                   </div>
                 </div>
@@ -109,21 +117,34 @@ const ViewAppointments = () => {
                   <span className={`status-badge ${apt.status}`}>
                     {apt.status}
                   </span>
-                  <Form method="delete" onSubmit={() => handleCancel(apt.id)}>
-                    <input type="hidden" name="appointmentId" value={apt.id} />
-                    <button 
-                      type="submit"
-                      className="cancel-btn"
-                    >
-                      Cancel
-                    </button>
-                  </Form>
+                  <button 
+                    type="button"
+                    onClick={() => handleCancelClick(apt.id)}
+                    className="cancel-btn"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             ))
           )}
         </div>
       </section>
+
+      {/* Confirmation modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-dialog">
+            <h3>Cancel Appointment</h3>
+            <p>Are you sure you want to cancel this appointment? This action cannot be undone.</p>
+            {cancelError && <div className="error-message">{cancelError}</div>}
+            <div className="modal-actions">
+              <button className="btn" onClick={() => { setShowModal(false); setToCancelId(null); }}>Close</button>
+              <button className="btn danger" onClick={confirmCancel} disabled={isCancelling}>{isCancelling ? 'Cancelling...' : 'Confirm Cancel'}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="appointments-section">
         <div className="section-header">

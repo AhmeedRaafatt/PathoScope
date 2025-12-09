@@ -9,8 +9,9 @@ export async function action({ request }) {
   const appointmentData = {
     date: formData.get('date'),
     time: formData.get('time'),
-    reason: formData.get('reason'),
-    notes: formData.get('notes') || '',
+    test_type: formData.get('test_type'),
+    selected_tests: formData.getAll('tests') || [],
+    notes: formData.get('notes') || ''
   };
 
   try {
@@ -27,12 +28,48 @@ export async function action({ request }) {
     );
 
     if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        error: true, 
-        message: errorData.detail || 'Failed to book appointment',
-        errors: errorData 
-      };
+      const errorData = await response.json().catch(() => null);
+      // Extract a single friendly message from various possible error shapes
+      let message = 'Failed to book appointment.';
+      if (errorData) {
+        if (Array.isArray(errorData)) {
+          message = errorData.join(' ');
+        } else if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+          message = errorData.non_field_errors.join(' ');
+        } else if (errorData.detail) {
+          message = errorData.detail;
+        } else if (errorData.tests && Array.isArray(errorData.tests)) {
+          message = errorData.tests.join(' ');
+        } else if (typeof errorData === 'object') {
+          // try to pick the first message string found
+          const firstVal = Object.values(errorData).find(v => Array.isArray(v) ? v.length > 0 : typeof v === 'string');
+          if (Array.isArray(firstVal)) message = firstVal.join(' ');
+          else if (typeof firstVal === 'string') message = firstVal;
+        }
+      }
+
+      // If backend returned an "Invalid test: <Name>" message, try to fetch allowed tests
+      const invalidMatch = String(message).match(/Invalid test:\s*(.+)/i);
+      if (invalidMatch && invalidMatch[1]) {
+        const invalidTestName = invalidMatch[1].trim();
+        try {
+          const base = 'http://127.0.0.1:8000/api/patient-portal';
+          const testsRes = await fetch(`${base}/available-tests/`, { headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` } });
+          if (testsRes.ok) {
+            const testsJson = await testsRes.json();
+            const allowed = Object.keys(testsJson?.[appointmentData.test_type] || {});
+            if (allowed.length) {
+              message = `${invalidTestName} is not available for ${appointmentData.test_type}. Available: ${allowed.join(', ')}`;
+            } else {
+              message = `${invalidTestName} is not a valid test for the selected test type.`;
+            }
+          }
+        } catch (e) {
+          // ignore, keep original message
+        }
+      }
+
+      return { error: true, message };
     }
 
     const data = await response.json();
@@ -60,8 +97,9 @@ const BookAppointment = () => {
 
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [reason, setReason] = useState('');
+  const [testType, setTestType] = useState('hematology');
   const [notes, setNotes] = useState('');
+  const [selectedTests, setSelectedTests] = useState([]);
 
   // Redirect on successful booking and refresh parent data
   useEffect(() => {
@@ -84,6 +122,11 @@ const BookAppointment = () => {
   // Extract available slots from context
   // Handle different possible data structures
   const availableSlots = context?.availableSlots || {};
+  // Tests list may be provided by backend via context.available_tests
+  // expected shape: [{ id, name, type }]
+  const availableTests = context.available_tests
+
+  const availableTestsFiltered = availableTests.filter(t => t.type === testType);
   
   // Extract available dates and times from availableSlots
   const availableDates = availableSlots?.dates || availableSlots?.available_dates || [
@@ -96,13 +139,6 @@ const BookAppointment = () => {
     '14:00:00', '14:30:00', '15:00:00', '15:30:00', '16:00:00'
   ];
 
-  const reasonOptions = [
-    'Sample Collection',
-    'Biopsy',
-    'Follow-up Consultation',
-    'Test Result Discussion',
-    'General Checkup'
-  ];
 
   return (
     <div className="book-appointment">
@@ -117,7 +153,6 @@ const BookAppointment = () => {
         {actionData?.error && (
           <div className="error-message">
             <h3>✗ {actionData.message}</h3>
-            {actionData.errors && <pre>{JSON.stringify(actionData.errors, null, 2)}</pre>}
           </div>
         )}
 
@@ -163,20 +198,18 @@ const BookAppointment = () => {
 
           <div className="form-group">
             <label>
-              3. Reason for Visit <span className="required">*</span>
+              3. Test Type <span className="required">*</span>
             </label>
             <select
-              name="reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              name="test_type"
+              value={testType}
+              onChange={(e) => setTestType(e.target.value)}
               required
               className="form-select"
               disabled={isSubmitting}
             >
-              <option value="">Select reason...</option>
-              {reasonOptions.map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
+              <option value="hematology">Hematology</option>
+              <option value="pathology">Pathology</option>
             </select>
           </div>
 
@@ -193,13 +226,36 @@ const BookAppointment = () => {
             />
           </div>
 
-          {selectedDate && selectedTime && reason && (
+          <div className="form-group">
+            <label>5. Select Tests <span className="required">*</span></label>
+            <div className="tests-checkboxes">
+              {availableTestsFiltered.map(test => (
+                <label key={test.id} className="test-checkbox">
+                  <input
+                    type="checkbox"
+                    name="tests"
+                    value={test.name}
+                    checked={selectedTests.includes(test.name)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setSelectedTests(prev => checked ? [...prev, test.name] : prev.filter(x => x !== test.name));
+                    }}
+                    disabled={isSubmitting}
+                  />
+                  {test.name}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {selectedDate && selectedTime && selectedTests.length > 0 && (
             <div className="appointment-summary">
               <h3>📅 Appointment Summary:</h3>
               <div className="summary-details">
                 <p><strong>Date:</strong> {selectedDate}</p>
                 <p><strong>Time:</strong> {selectedTime}</p>
-                <p><strong>Reason:</strong> {reason}</p>
+                <p><strong>Test Type:</strong> {testType}</p>
+                <p><strong>Selected Tests:</strong> {selectedTests.join(', ')}</p>
                 {notes && <p><strong>Notes:</strong> {notes}</p>}
               </div>
             </div>
@@ -208,7 +264,7 @@ const BookAppointment = () => {
           <div className="form-actions">
             <button
               type="submit"
-              disabled={!selectedDate || !selectedTime || !reason || isSubmitting}
+              disabled={!selectedDate || !selectedTime || selectedTests.length === 0 || isSubmitting}
               className="submit-btn"
             >
               {isSubmitting ? 'Booking...' : 'Book Appointment'}

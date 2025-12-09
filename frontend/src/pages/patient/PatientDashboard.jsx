@@ -160,7 +160,7 @@ export default function PatientDashboard() {
                                     <FontAwesomeIcon icon={faCalendarCheck} />
                                 </div>
                                 <div className="item-content">
-                                    <h3 className="item-title">{appointment.reason || 'Appointment'}</h3>
+                                    <h3 className="item-title">{appointment.test_type ? appointment.test_type.replace('_', ' ') : (appointment.reason || 'Appointment')}</h3>
                                     <p className="item-subtitle">
                                         <FontAwesomeIcon icon={faClock} className="small-icon" />
                                         {appointment.date} at {appointment.time}
@@ -258,12 +258,12 @@ export default function PatientDashboard() {
                                 </div>
                                 <div className="invoice-actions">
                                     <span className="amount">${parseFloat(invoice.amount || 0).toFixed(2)}</span>
-                                    <button 
+                                    <Link 
                                         className="action-btn primary"
-                                        onClick={() => handlePayment(invoice.id)}
+                                        to="/patient/billings"
                                     >
                                         Pay Now
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                         ))}

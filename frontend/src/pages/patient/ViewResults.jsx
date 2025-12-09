@@ -1,213 +1,203 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { FileText, Download, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileText, Download, Eye, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import '../../styles/patient/Results.css';
 
-const ViewResults = () => {
+export default function ViewResults() {
   const context = useOutletContext();
   const testOrders = Array.isArray(context?.testOrders) ? context.testOrders : [];
-  const [expandedId, setExpandedId] = useState(null);
-
-  // Separate results by status
-  const reportReadyResults = testOrders.filter(order => 
-    order.status === 'Report Ready' || order.status === 'Complete'
-  );
-  
-  const pendingResults = testOrders.filter(order => 
-    order.status === 'Pending' || order.status === 'In Progress'
-  );
-
-  const getStatusIcon = (status) => {
-    switch(status) {
-      case 'Report Ready':
-      case 'Complete':
-        return <CheckCircle className="status-icon ready" size={20} />;
-      case 'In Progress':
-        return <Clock className="status-icon progress" size={20} />;
-      case 'Pending':
-        return <AlertCircle className="status-icon pending" size={20} />;
-      default:
-        return <FileText className="status-icon" size={20} />;
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Report Ready':
-      case 'Complete':
-        return 'ready';
-      case 'In Progress':
-        return 'progress';
-      case 'Pending':
-        return 'pending';
-      default:
-        return 'default';
-    }
-  };
+  const [expandedTest, setExpandedTest] = useState(null);
+  const [filterType, setFilterType] = useState('all'); // 'all', 'hematology', 'pathology'
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'ready', 'pending'
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     });
   };
 
-  const handleDownloadReport = (reportUrl, testName) => {
-    if (reportUrl) {
-      window.open(reportUrl, '_blank');
-    }
+  const toggleExpand = (testId) => {
+    setExpandedTest(expandedTest === testId ? null : testId);
   };
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  // Filter tests
+  const filteredTests = testOrders.filter(test => {
+    const typeMatch = filterType === 'all' || test.test_type === filterType;
+    const statusMatch = filterStatus === 'all' || 
+      (filterStatus === 'ready' && (test.status === 'Report Ready' || test.status === 'Complete')) ||
+      (filterStatus === 'pending' && test.status !== 'Report Ready' && test.status !== 'Complete');
+    return typeMatch && statusMatch;
+  });
+
+  // Sort by date (most recent first)
+  const sortedTests = [...filteredTests].sort((a, b) => 
+    new Date(b.order_date) - new Date(a.order_date)
+  );
 
   return (
-    <div className="view-results">
-      {/* Report Ready Results */}
-      {reportReadyResults.length > 0 && (
-        <section className="results-section">
-          <div className="section-header">
-            <h2 className="section-title">
-              <CheckCircle className="section-icon" size={24} />
-              Reports Ready ({reportReadyResults.length})
-            </h2>
+    <div className="results-view">
+      {/* Filter Section */}
+      <div className="results-filters">
+        <div className="filter-group">
+          <label className="filter-label">
+            <Filter size={16} />
+            Test Type:
+          </label>
+          <div className="filter-buttons">
+            <button 
+              className={`filter-btn ${filterType === 'all' ? 'active' : ''}`}
+              onClick={() => setFilterType('all')}
+            >
+              All ({testOrders.length})
+            </button>
+            <button 
+              className={`filter-btn ${filterType === 'hematology' ? 'active' : ''}`}
+              onClick={() => setFilterType('hematology')}
+            >
+              Hematology ({testOrders.filter(t => t.test_type === 'hematology').length})
+            </button>
+            <button 
+              className={`filter-btn ${filterType === 'pathology' ? 'active' : ''}`}
+              onClick={() => setFilterType('pathology')}
+            >
+              Pathology ({testOrders.filter(t => t.test_type === 'pathology').length})
+            </button>
           </div>
-          <div className="results-list">
-            {reportReadyResults.map(result => (
+        </div>
+
+        <div className="filter-group">
+          <label className="filter-label">Status:</label>
+          <div className="filter-buttons">
+            <button 
+              className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('all')}
+            >
+              All
+            </button>
+            <button 
+              className={`filter-btn ${filterStatus === 'ready' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('ready')}
+            >
+              Ready
+            </button>
+            <button 
+              className={`filter-btn ${filterStatus === 'pending' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('pending')}
+            >
+              Pending
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Results Count */}
+      <div className="results-summary">
+        <p className="results-count">
+          Showing <strong>{sortedTests.length}</strong> {sortedTests.length === 1 ? 'result' : 'results'}
+        </p>
+      </div>
+
+      {/* Test List */}
+      {sortedTests.length === 0 ? (
+        <div className="empty-state">
+          <FileText size={48} className="empty-icon" />
+          <h3>No results found</h3>
+          <p>No test results match your current filters.</p>
+        </div>
+      ) : (
+        <div className="test-list">
+          {sortedTests.map(test => (
+            <div key={test.id} className="test-card">
               <div 
-                key={result.id} 
-                className={`result-card ready ${expandedId === result.id ? 'expanded' : ''}`}
+                className="test-card-header"
+                onClick={() => toggleExpand(test.id)}
               >
-                <div 
-                  className="result-header"
-                  onClick={() => toggleExpand(result.id)}
-                >
-                  <div className="result-info">
-                    <div className="result-icon">
-                      {getStatusIcon(result.status)}
-                    </div>
-                    <div className="result-details">
-                      <h3 className="result-name">{result.test_name}</h3>
-                      <div className="result-meta">
-                        <span className="test-type">{result.test_type}</span>
-                        <span className="order-date">{formatDate(result.order_date)}</span>
-                      </div>
-                    </div>
+                <div className="test-info">
+                  <div className={`test-icon-wrapper ${test.test_type}`}>
+                    <FileText size={20} />
                   </div>
-                  <div className="result-status">
-                    <span className={`status-badge ${getStatusColor(result.status)}`}>
-                      {result.status}
-                    </span>
+                  <div className="test-details">
+                    <div className="test-name-row">
+                      <h3 className="test-name">{test.test_name}</h3>
+                      <span className="test-type-label">{test.test_type}</span>
+                    </div>
+                    <p className="test-date">{formatDate(test.order_date)}</p>
                   </div>
                 </div>
-
-                {expandedId === result.id && (
-                  <div className="result-content">
-                    <div className="result-actions">
-                      {result.report_url && (
-                        <button 
-                          className="action-btn download-btn"
-                          onClick={() => handleDownloadReport(result.report_url, result.test_name)}
-                        >
-                          <Download size={18} />
-                          View Report PDF
-                        </button>
-                      )}
-                      {result.slide_url && (
-                        <button 
-                          className="action-btn viewer-btn"
-                          onClick={() => window.open(result.slide_url, '_blank')}
-                        >
-                          <FileText size={18} />
-                          Open DICOM/WSI Viewer
-                        </button>
-                      )}
-                    </div>
-                    <div className="result-details-full">
-                      <p><strong>Test Type:</strong> {result.test_type}</p>
-                      <p><strong>Ordered:</strong> {formatDate(result.order_date)}</p>
-                      {result.report_url && <p><strong>Report:</strong> Available for download</p>}
-                      {result.slide_url && <p><strong>Slide:</strong> Available in DICOM/WSI viewer</p>}
-                    </div>
-                  </div>
-                )}
+                <div className="test-actions">
+                  <span className={`status-badge ${test.status === 'Report Ready' || test.status === 'Complete' ? 'ready' : 'pending'}`}>
+                    {test.status}
+                  </span>
+                  <button className="expand-btn">
+                    {expandedTest === test.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
 
-      {/* Pending/In Progress Results */}
-      {pendingResults.length > 0 && (
-        <section className="results-section">
-          <div className="section-header">
-            <h2 className="section-title">
-              <Clock className="section-icon" size={24} />
-              Processing ({pendingResults.length})
-            </h2>
-          </div>
-          <div className="results-list">
-            {pendingResults.map(result => (
-              <div 
-                key={result.id} 
-                className={`result-card pending ${expandedId === result.id ? 'expanded' : ''}`}
-              >
-                <div 
-                  className="result-header"
-                  onClick={() => toggleExpand(result.id)}
-                >
-                  <div className="result-info">
-                    <div className="result-icon">
-                      {getStatusIcon(result.status)}
-                    </div>
-                    <div className="result-details">
-                      <h3 className="result-name">{result.test_name}</h3>
-                      <div className="result-meta">
-                        <span className="test-type">{result.test_type}</span>
-                        <span className="order-date">{formatDate(result.order_date)}</span>
+              {expandedTest === test.id && (
+                <div className="test-card-content">
+                  {test.status === 'Report Ready' || test.status === 'Complete' ? (
+                    <div className="all-results-content">
+                      {/* Test Information */}
+                      <div className="info-grid">
+                        <div className="info-item">
+                          <span className="info-label">Test Type</span>
+                          <span className="info-value">{test.test_type}</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Test Name</span>
+                          <span className="info-value">{test.test_name}</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Order Date</span>
+                          <span className="info-value">{formatDate(test.order_date)}</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Status</span>
+                          <span className="info-value">{test.status}</span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="all-results-actions">
+                        {test.report_url && (
+                          <button 
+                            className="btn-action primary"
+                            onClick={() => window.open(test.report_url, '_blank')}
+                          >
+                            <Download size={18} />
+                            Download Report PDF
+                          </button>
+                        )}
+                        
+                        {test.slide_url && (
+                          <button 
+                            className="btn-action secondary"
+                            onClick={() => window.open(test.slide_url, '_blank')}
+                          >
+                            <Eye size={18} />
+                            View Digital Slides
+                          </button>
+                        )}
+
+                        {!test.report_url && !test.slide_url && (
+                          <p className="no-actions">No downloadable files available</p>
+                        )}
                       </div>
                     </div>
-                  </div>
-                  <div className="result-status">
-                    <span className={`status-badge ${getStatusColor(result.status)}`}>
-                      {result.status}
-                    </span>
-                  </div>
-                </div>
-
-                {expandedId === result.id && (
-                  <div className="result-content">
-                    <div className="result-details-full">
-                      <p><strong>Test Type:</strong> {result.test_type}</p>
-                      <p><strong>Ordered:</strong> {formatDate(result.order_date)}</p>
-                      <p className="status-message">
-                        Your report is being processed. Please check back soon.
-                      </p>
+                  ) : (
+                    <div className="processing-state">
+                      <p>This test is currently being processed. Results will be available soon.</p>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* No Results */}
-      {testOrders.length === 0 && (
-        <section className="results-section">
-          <div className="no-results">
-            <FileText size={48} />
-            <h3>No test results yet</h3>
-            <p>Your test results will appear here once they are ready.</p>
-          </div>
-        </section>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
-};
-
-export default ViewResults;
+}

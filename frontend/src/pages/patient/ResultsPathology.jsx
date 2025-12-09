@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { FileText, ExternalLink } from 'lucide-react';
+import { FileText, Download, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import '../../styles/patient/Results.css';
 
 const ResultsPathology = () => {
   const context = useOutletContext();
   const testOrders = Array.isArray(context?.testOrders) ? context.testOrders : [];
+  const [expandedTest, setExpandedTest] = useState(null);
   
-  // Filter only pathology tests
   const pathologyTests = testOrders.filter(order => 
     order.test_type === 'pathology'
   );
@@ -20,79 +20,94 @@ const ResultsPathology = () => {
     });
   };
 
+  const toggleExpand = (testId) => {
+    setExpandedTest(expandedTest === testId ? null : testId);
+  };
+
   const handleOpenViewer = (slideUrl) => {
     if (slideUrl) {
-      // Opens DICOM/WSI viewer in new tab
-      // In production, you would integrate Cornerstone.js or similar
       window.open(slideUrl, '_blank');
     }
   };
 
   return (
-    <div className="results-pathology">
-      <div className="pathology-header">
-        <h2>Pathology Results</h2>
-        <p>Tissue samples, biopsies, and microscopic analysis</p>
-      </div>
-
+    <div className="results-view">
       {pathologyTests.length === 0 ? (
-        <div className="no-results">
-          <FileText size={48} />
+        <div className="empty-state">
+          <FileText size={48} className="empty-icon" />
           <h3>No pathology tests available</h3>
-          <p>You don't have any pathology test results yet.</p>
+          <p>You don't have any tissue biopsy or pathology results yet.</p>
         </div>
       ) : (
-        <div className="pathology-tests">
+        <div className="test-list">
           {pathologyTests.map(test => (
-            <div key={test.id} className="pathology-test-card">
-              <div className="test-card-header">
+            <div key={test.id} className="test-card">
+              <div 
+                className="test-card-header"
+                onClick={() => toggleExpand(test.id)}
+              >
                 <div className="test-info">
-                  <h3>{test.test_name}</h3>
-                  <span className={`status-badge ${test.status === 'Report Ready' ? 'ready' : 'pending'}`}>
+                  <div className="test-icon-wrapper pathology">
+                    <FileText size={20} />
+                  </div>
+                  <div className="test-details">
+                    <h3 className="test-name">{test.test_name}</h3>
+                    <p className="test-date">{formatDate(test.order_date)}</p>
+                  </div>
+                </div>
+                <div className="test-actions">
+                  <span className={`status-badge ${test.status === 'Report Ready' || test.status === 'Complete' ? 'ready' : 'pending'}`}>
                     {test.status}
                   </span>
-                </div>
-                <div className="test-date">
-                  {formatDate(test.order_date)}
+                  <button className="expand-btn">
+                    {expandedTest === test.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </button>
                 </div>
               </div>
 
-              {test.status === 'Report Ready' || test.status === 'Complete' ? (
-                <div className="pathology-content">
-                  <div className="pathology-report">
-                    <h4>Pathology Report</h4>
-                    {test.report_url ? (
-                      <button 
-                        className="btn-download"
-                        onClick={() => window.open(test.report_url, '_blank')}
-                      >
-                        <FileText size={18} />
-                        View PDF Report
-                      </button>
-                    ) : (
-                      <p className="no-report">Report not available</p>
-                    )}
-                  </div>
+              {expandedTest === test.id && (
+                <div className="test-card-content">
+                  {test.status === 'Report Ready' || test.status === 'Complete' ? (
+                    <div className="pathology-content">
+                      <div className="content-section">
+                        <h4 className="section-title">Pathology Report</h4>
+                        <p className="section-description">
+                          Detailed microscopic examination and diagnosis by certified pathologist
+                        </p>
+                        {test.report_url ? (
+                          <button 
+                            className="btn-action primary"
+                            onClick={() => window.open(test.report_url, '_blank')}
+                          >
+                            <Download size={18} />
+                            Download PDF Report
+                          </button>
+                        ) : (
+                          <p className="no-data">Report not available</p>
+                        )}
+                      </div>
 
-                  {test.slide_url && (
-                    <div className="pathology-slides">
-                      <h4>Microscopic Slides</h4>
-                      <button 
-                        className="btn-viewer"
-                        onClick={() => handleOpenViewer(test.slide_url)}
-                      >
-                        <ExternalLink size={18} />
-                        Open DICOM/WSI Viewer
-                      </button>
-                      <p className="viewer-info">
-                        View high-resolution tissue samples using the DICOM/WSI viewer
-                      </p>
+                      {test.slide_url && (
+                        <div className="content-section">
+                          <h4 className="section-title">Digital Microscopic Slides</h4>
+                          <p className="section-description">
+                            View high-resolution tissue samples using our advanced DICOM viewer
+                          </p>
+                          <button 
+                            className="btn-action secondary"
+                            onClick={() => handleOpenViewer(test.slide_url)}
+                          >
+                            <Eye size={18} />
+                            Open Slide Viewer
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="processing-state">
+                      <p>This tissue sample is being analyzed by our pathologists. Results will be available shortly.</p>
                     </div>
                   )}
-                </div>
-              ) : (
-                <div className="processing-message">
-                  <p>This tissue sample is being analyzed by our pathologists. Results will be available shortly.</p>
                 </div>
               )}
             </div>

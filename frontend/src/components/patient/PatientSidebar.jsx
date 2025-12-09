@@ -27,6 +27,13 @@ export default function PatientSidebar() {
                     <p className="feature-name">Dashboard</p>
                 </Link>
                 <Link 
+                    to="profile" 
+                    className={`sidebar-feature ${location.pathname === '/patient/profile' || location.pathname === '/patient/profile' ? 'active' : ''}`}
+                >
+                    <FontAwesomeIcon icon={faUser} className="feature-icon" />
+                    <p className="feature-name">Profile</p>
+                </Link>
+                <Link 
                     to="appointments" 
                     className={`sidebar-feature ${location.pathname === '/patient/appointments' ? 'active' : ''}`}
                 >
@@ -66,12 +73,11 @@ export default function PatientSidebar() {
                     <FontAwesomeIcon icon={faFileInvoiceDollar} className="feature-icon" />
                     <p className="feature-name">Billing & Invoices</p>
                 </Link>
-            </nav>
-
-            <button className="logout-btn" onClick={handleLogout}>
+                <button className="logout-btn" onClick={handleLogout}>
                 <FontAwesomeIcon icon={faRightFromBracket} className="feature-icon" />
                 <span>Logout</span>
             </button>
+            </nav>
         </div>
     )
 }
