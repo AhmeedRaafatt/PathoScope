@@ -1,6 +1,8 @@
-import { Form, Link, redirect } from "react-router-dom"
+import { Form, Link, redirect, useActionData } from "react-router-dom" // <--- Add useActionData
 import '../../styles/Login.css'
 import logo from "../../assets/logo.png"
+
+
 export async function action({ request }) {
   const formData = await request.formData()
   const username = formData.get("username")
@@ -40,10 +42,20 @@ export async function action({ request }) {
 }
 
 export default function LoginPage() {
+  const actionData = useActionData(); // <--- 1. Get the data returned from action()
+
   return (
     <main className="login">
-      <img src={logo}/>
+      <img src={logo} alt="Logo"/> {/* Added alt text for best practice */}
       <h1>Login</h1>
+
+      {/* 2. Display the Error Message if it exists */}
+      {actionData && actionData.error && (
+        <div style={{ color: 'red', marginBottom: '10px', fontWeight: 'bold' }}>
+          {actionData.error}
+        </div>
+      )}
+
       <Form method="post" replace>
         <label>
           Username :
