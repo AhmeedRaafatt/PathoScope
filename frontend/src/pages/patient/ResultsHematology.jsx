@@ -12,6 +12,15 @@ const ResultsHematology = () => {
     order.test_type === 'hematology'
   );
 
+  // Map test_order id -> sample (if a sample exists for that order)
+  const hematologySamples = Array.isArray(context?.hematology_samples) ? context.hematology_samples : [];
+  const sampleByTestOrder = {};
+  hematologySamples.forEach(s => {
+    if (s.test_order_id) sampleByTestOrder[s.test_order_id] = s;
+  });
+
+  const [resultsBySample, setResultsBySample] = useState({});
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -21,7 +30,39 @@ const ResultsHematology = () => {
   };
 
   const toggleExpand = (testId) => {
-    setExpandedTest(expandedTest === testId ? null : testId);
+    const next = expandedTest === testId ? null : testId;
+    setExpandedTest(next);
+
+    // If expanding and sample exists, fetch results for that sample if not loaded
+    if (next) {
+      const testOrder = hematologyTests.find(t => t.id === testId);
+      const sample = sampleByTestOrder[testId] || null;
+      if (sample && !resultsBySample[sample.id]) {
+        // fetch results with better error handling
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('No auth token for fetching results');
+          setResultsBySample(prev => ({ ...prev, [sample.id]: { __error: 'No auth token' } }));
+          return
+        }
+
+        fetch(`http://127.0.0.1:8000/api/hematology/samples/${sample.id}/results/`, {
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` }
+        })
+          .then(async (res) => {
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.error || 'Failed to fetch sample results');
+            }
+            return res.json();
+          })
+          .then(json => setResultsBySample(prev => ({ ...prev, [sample.id]: json })))
+          .catch(err => {
+            console.error('Error loading sample results', err);
+            setResultsBySample(prev => ({ ...prev, [sample.id]: { __error: err.message } }));
+          });
+      }
+    }
   };
 
   // Sample hematology values - Replace with actual backend data
@@ -73,61 +114,61 @@ const ResultsHematology = () => {
 
               {expandedTest === test.id && (
                 <div className="test-card-content">
-                  {test.status === 'Report Ready' || test.status === 'Complete' ? (
-                    <>
-                      <div className="results-table-wrapper">
-                        <table className="results-table">
-                          <thead>
-                            <tr>
-                              <th>Parameter</th>
-                              <th>Value</th>
-                              <th>Unit</th>
-                              <th>Reference Range</th>
-                              <th>Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sampleHematologyValues[test.test_name]?.map((param, idx) => (
-                              <tr key={idx} className={param.normal ? '' : 'abnormal'}>
-                                <td className="param-name">{param.parameter}</td>
-                                <td className="param-value">{param.value}</td>
-                                <td className="param-unit">{param.unit}</td>
-                                <td className="param-reference">{param.reference}</td>
-                                <td className="param-status">
-                                  {param.normal ? (
-                                    <span className="status-normal">Normal</span>
-                                  ) : (
-                                    <span className="status-abnormal">
-                                      <AlertCircle size={14} />
-                                      Abnormal
-                                    </span>
-                                  )}
-                                </td>
+                  {(() => {
+                    const sample = sampleByTestOrder[test.id];
+                    if (!sample) {
+                      return <div className="processing-state"><p>No sample has been accessioned for this test yet.</p></div>;
+                    }
+
+                    const results = resultsBySample[sample.id];
+                    if (!results) {
+                      // not loaded yet - show loading or processing state depending on sample status
+                      return <div className="processing-state"><p>Loading results or test is still processing...</p></div>;
+                    }
+
+                    if (results && results.__error) {
+                      return <div className="processing-state"><p>Error loading results: {results.__error}</p></div>;
+                    }
+
+                    if (Array.isArray(results) && results.length === 0) {
+                      return <div className="processing-state"><p>No analyte results recorded for this sample.</p></div>;
+                    }
+
+                    return (
+                      <>
+                        <div className="results-table-wrapper">
+                          <table className="results-table">
+                            <thead>
+                              <tr>
+                                <th>Parameter</th>
+                                <th>Value</th>
+                                <th>Unit</th>
+                                <th>Reference Range</th>
+                                <th>Status</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      
-                      {test.report_url && (
-                        <div className="action-buttons">
-                          <a 
-                            href={test.report_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="btn-download"
-                          >
-                            <Download size={18} />
-                            Download Full Report
-                          </a>
+                            </thead>
+                            <tbody>
+                              {results.map((r) => (
+                                <tr key={r.id} className={r.is_flagged ? 'abnormal' : ''}>
+                                  <td className="param-name">{r.analyte_name}</td>
+                                  <td className="param-value">{r.value}</td>
+                                  <td className="param-unit">{r.unit}</td>
+                                  <td className="param-reference">{r.normal_range_low} - {r.normal_range_high}</td>
+                                  <td className="param-status">
+                                    {r.is_flagged ? (
+                                      <span className="status-abnormal"><AlertCircle size={14} /> {r.flag_type || 'Abnormal'}</span>
+                                    ) : (
+                                      <span className="status-normal">Normal</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="processing-state">
-                      <p>This test is still being processed. Results will be available soon.</p>
-                    </div>
-                  )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>

@@ -25,24 +25,12 @@ const ViewAppointments = () => {
   });
 
   // Mock past appointments for visualization
-  const pastAppointments = [
-    { 
-      id: 'mock-1', 
-      date: '2025-11-28', 
-      time: '10:00:00', 
-      reason: 'Blood Test', 
-      status: 'completed', 
-      notes: '' 
-    },
-    { 
-      id: 'mock-2', 
-      date: '2025-11-15', 
-      time: '11:30:00', 
-      reason: 'Consultation', 
-      status: 'completed', 
-      notes: '' 
-    }
-  ];
+  const pastAppointments = appointments.filter(apt => {
+    const aptDate = new Date(apt.date);
+    aptDate.setHours(0, 0, 0, 0);
+    return aptDate >= today && apt.status === 'completed' && apt.status !== 'cancelled';
+  });
+
 
   const handleCancelClick = (appointmentId) => {
     setCancelError('');

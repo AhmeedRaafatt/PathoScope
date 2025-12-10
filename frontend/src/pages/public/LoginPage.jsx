@@ -23,9 +23,15 @@ export async function action({ request }) {
       localStorage.setItem('username', data.username);
       localStorage.setItem('role', data.role);
       console.log("Login successful:", data);
-      return redirect('/patient'); 
-      
-    } else {
+      if (data.role === 'patient') {
+        return redirect('/patient');
+      } else if (data.role === 'lab_tech' || data.role === 'pathologist' || data.role === 'admin') {
+        return redirect('/hematology');
+      } else {
+        return redirect('/login'); // Unknown role? Send back to login
+      } 
+
+     } else {
       return { 
         error: data.error || data.detail || "Invalid username or password. Please try again.",
         status: response.status 
