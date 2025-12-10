@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/auth/', include('accounts.urls')), # This adds your routes
     path('api/accounts/', include('accounts.urls')),
     path('api/patient-portal/', include('patient_portal.urls')),
+    path('api/hematology/', include('hematology.urls')),
 ]
