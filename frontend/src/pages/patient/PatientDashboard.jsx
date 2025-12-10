@@ -274,7 +274,7 @@ export default function PatientDashboard() {
             {/* Empty State Messages */}
             {upcomingAppointments.length === 0 && recentResults.length === 0 && unpaidInvoices.length === 0 && (
                 <section className="dashboard-section empty-state">
-                    <p className="empty-message">
+                    <p className="empty-message ">
                         You don't have any recent activity. Book an appointment to get started!
                     </p>
                     <Link to="/patient/appointments/book" className="btn-primary">

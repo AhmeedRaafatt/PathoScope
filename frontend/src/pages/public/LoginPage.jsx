@@ -1,7 +1,6 @@
-import { Form, Link, redirect, useActionData } from "react-router-dom" // <--- Add useActionData
+import { Form, Link, redirect, useActionData } from "react-router-dom"
 import '../../styles/Login.css'
 import logo from "../../assets/logo.png"
-
 
 export async function action({ request }) {
   const formData = await request.formData()
@@ -28,55 +27,61 @@ export async function action({ request }) {
       
     } else {
       return { 
-        error: data.error || "Login Failed",
+        error: data.error || data.detail || "Invalid username or password. Please try again.",
         status: response.status 
       };
     }
   } catch (error) {
     console.error("Network Error:", error);
     return { 
-      error: "Could not connect to server. Please try again.",
+      error: "Could not connect to server. Please check your connection and try again.",
       networkError: true 
     };
   }
 }
 
 export default function LoginPage() {
-  const actionData = useActionData(); // <--- 1. Get the data returned from action()
+  const actionData = useActionData();
 
   return (
     <main className="login">
-      <img src={logo} alt="Logo"/> {/* Added alt text for best practice */}
-      <h1>Login</h1>
-
-      {/* 2. Display the Error Message if it exists */}
-      {actionData && actionData.error && (
-        <div style={{ color: 'red', marginBottom: '10px', fontWeight: 'bold' }}>
-          {actionData.error}
-        </div>
-      )}
+      <img src={logo} alt="PathoScope Logo"/>
 
       <Form method="post" replace>
-        <label>
-          Username :
-          <input 
-            type="text" 
-            name="username" 
-            required 
-            placeholder="Enter your username"
-          />
-        </label>
-        <label>
-          Password : 
-          <input 
-            type="password" 
-            name="password" 
-            required
-            placeholder="Enter your password"
-          />
-        </label>
-        <Link to="/register">Don't have an account? Sign up</Link>
-        <button type="submit">Login</button>
+        <div className="form-content">
+          <h1>Login</h1>
+
+          {/* Error Alert */}
+          {actionData && actionData.error && (
+            <div className="alert alert-error">
+              {actionData.error}
+            </div>
+          )}
+
+          <label>
+            Username :
+            <input 
+              type="text" 
+              name="username" 
+              required 
+              placeholder="Enter your username"
+            />
+          </label>
+
+          <label>
+            Password : 
+            <input 
+              type="password" 
+              name="password" 
+              required
+              placeholder="Enter your password"
+            />
+          </label>
+
+          <Link to="/register">Don't have an account? Sign up</Link>
+          
+          <button type="submit">Login</button>
+        </div>
       </Form>
     </main>
   )

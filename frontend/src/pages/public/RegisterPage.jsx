@@ -1,4 +1,4 @@
-import { Form, Link, redirect, useActionData } from "react-router-dom"; // <--- Added useActionData
+import { Form, Link, redirect, useActionData } from "react-router-dom";
 import '../../styles/Login.css';
 import logo from "../../assets/logo.png";
 
@@ -22,13 +22,11 @@ export async function action({ request }) {
 
     if (response.ok) {
       console.log("Registration successful:", data);
-      // Optional: Add an alert or toast here if you want before redirecting
       return redirect('/login');
 
     } else {
-      // We pass the full 'data' object back as 'details' so we can show specific field errors
       return {
-        error: "Registration failed. Please check the fields.",
+        error: "Registration failed. Please check the fields below.",
         details: data,
         status: response.status
       };
@@ -36,88 +34,95 @@ export async function action({ request }) {
   } catch (error) {
     console.error("Network Error:", error);
     return {
-      error: "Could not connect to server. Please try again.",
+      error: "Could not connect to server. Please check your connection and try again.",
       networkError: true
     };
   }
 }
 
 export default function RegisterPage() {
-  const actionData = useActionData(); // <--- Hook to get the errors
+  const actionData = useActionData();
 
   return (
     <main className="register">
       <img src={logo} alt="PathoScope Logo"/>
-      <h1>Sign Up</h1>
-
-      {/* 1. Main Error Banner (if connection fails or generic error) */}
-      {actionData && actionData.error && (
-         <div style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>
-            {actionData.error}
-         </div>
-      )}
 
       <Form method="post" replace>
-        <label>
-          Username :
-          <input
-            type="text"
-            name="username"
-            required
-            placeholder="Choose a username"
-          />
-          {/* Specific Username Error */}
-          {actionData?.details?.username && (
-            <span style={{color: 'red', fontSize: '0.8rem'}}>
-              {actionData.details.username[0]}
-            </span>
+        <div className="form-content">
+          <h1>Sign Up</h1>
+
+          {/* Main Error Alert */}
+          {actionData && actionData.error && (
+            <div className="alert alert-error">
+              {actionData.error}
+            </div>
           )}
-        </label>
 
-        <label>
-          Email :
-          <input
-            type="email"
-            name="email"
-            required
-            placeholder="Enter your email"
-          />
-          {/* Specific Email Error (e.g. "Must end in @mail.com") */}
-          {actionData?.details?.email && (
-            <span style={{color: 'red', fontSize: '0.8rem'}}>
-              {actionData.details.email[0]}
-            </span>
-          )}
-        </label>
+          <label>
+            Username :
+            <input
+              type="text"
+              name="username"
+              required
+              placeholder="Choose a username"
+            />
+            {actionData?.details?.username && (
+              <span className="field-error">
+                {Array.isArray(actionData.details.username) 
+                  ? actionData.details.username[0] 
+                  : actionData.details.username}
+              </span>
+            )}
+          </label>
 
-        <label>
-          Password :
-          <input
-            type="password"
-            name="password"
-            required
-            placeholder="Create a password"
-          />
-          {/* Specific Password Error (e.g. "Too weak") */}
-          {actionData?.details?.password && (
-            <span style={{color: 'red', fontSize: '0.8rem'}}>
-              {actionData.details.password[0]}
-            </span>
-          )}
-        </label>
+          <label>
+            Email :
+            <input
+              type="email"
+              name="email"
+              required
+              placeholder="Enter your email"
+            />
+            {actionData?.details?.email && (
+              <span className="field-error">
+                {Array.isArray(actionData.details.email) 
+                  ? actionData.details.email[0] 
+                  : actionData.details.email}
+              </span>
+            )}
+          </label>
 
-        <label>
-          Select Role :
-          <select name="role" defaultValue="patient">
-            <option value="patient">Patient</option>
-            <option value="lab_tech">Lab Technician</option>
-            <option value="pathologist">Pathologist</option>
-            <option value="admin">Admin</option>
-          </select>
-        </label>
+          <label>
+            Password :
+            <input
+              type="password"
+              name="password"
+              required
+              placeholder="Create a password"
+            />
+            {actionData?.details?.password && (
+              <span className="field-error">
+                {Array.isArray(actionData.details.password) 
+                  ? actionData.details.password[0] 
+                  : actionData.details.password}
+              </span>
+            )}
+          </label>
 
-        <Link to="/login">Already have an account? Login</Link>
-        <button type="submit">Register</button>
+          <label>
+            Select Role :
+            <select name="role" defaultValue="patient">
+              <option value="patient">Patient</option>
+              <option value="lab_tech">Lab Technician</option>
+              <option value="pathologist">Pathologist</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+
+          <Link to="/login">Already have an account? Login</Link>
+          
+          <button type="submit">Register</button>
+        </div>
       </Form>
     </main>
   )

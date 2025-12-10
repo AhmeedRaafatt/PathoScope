@@ -10,8 +10,16 @@
     position: relative;
     overflow: hidden;
 }
-img{
-    width:400px;
+
+.login img, .register img {
+    width: 280px;
+    margin-bottom: 2rem;
+    z-index: 10;
+    transition: transform 0.3s ease;
+}
+
+.login img:hover, .register img:hover {
+    transform: scale(1.05);
 }
 
 /* Decorative background elements */
@@ -37,46 +45,19 @@ img{
     border-radius: 50%;
 }
 
-/* Header with Logo */
-.login > header {
-    margin-bottom: 1.5rem;
-    z-index: 10;
-}
-
-.login > header img {
-    width: 200px;
-    height: auto;
-    transition: transform 0.3s ease;
-}
-
-.login > header img:hover {
-    transform: scale(1.05);
-}
-
-/* Main Heading */
-.login > h1, .register > h1 {
-    font-size: 2.5rem;
-    font-weight: 600;
-    color: #2d3748;
-    margin-bottom: 2rem;
-    z-index: 5;
-    position: relative;
-}
-
-/* Form Container */
+/* Form Container with Top Border */
 .login Form, .register Form {
     background: linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%);
     border-radius: 20px;
-    padding: 50px 60px;
+    padding: 0;
     width: 100%;
     max-width: 480px;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
     position: relative;
     z-index: 5;
+    overflow: hidden;
     
-    /* Beautiful box shadow matching service cards */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 
                 0 8px 16px rgba(0, 0, 0, 0.04),
                 0 12px 24px rgba(91, 101, 220, 0.08);
@@ -89,6 +70,78 @@ img{
                 0 20px 40px rgba(91, 101, 220, 0.08),
                 0 0 0 1px rgba(91, 101, 220, 0.1);
     transform: translateY(-4px);
+}
+
+/* Top Colored Border */
+.login Form::before, .register Form::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #5B65DC 0%, #868ff5 100%);
+}
+
+/* Form Content Wrapper */
+.form-content {
+    padding: 50px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Heading Inside Form */
+.login Form h1, .register Form h1 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 2rem 0;
+    text-align: center;
+}
+
+/* Error/Success Alert Box */
+.alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.alert-error {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.alert-success {
+    background-color: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.alert::before {
+    content: "⚠";
+    font-size: 1.2rem;
+}
+
+.alert-success::before {
+    content: "✓";
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Label Styling */
@@ -135,6 +188,14 @@ img{
     padding: 10px;
 }
 
+/* Field-specific error messages */
+.field-error {
+    color: #dc2626;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: -0.3rem;
+}
+
 /* Link to Register/Login */
 .login Form a, .register Form a {
     color: #5B65DC;
@@ -179,8 +240,8 @@ img{
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .login > h1, .register > h1 {
-        font-size: 2rem;
+    .login img, .register img {
+        width: 220px;
     }
     
     .login Form, .register Form {
@@ -188,8 +249,8 @@ img{
         max-width: 100%;
     }
     
-    .login > header img {
-        width: 160px;
+    .login Form h1, .register Form h1 {
+        font-size: 2rem;
     }
 }
 
@@ -198,15 +259,15 @@ img{
         padding: 20px 15px;
     }
     
-    .login > h1, .register > h1 {
-        font-size: 1.75rem;
-    }
-    
     .login Form, .register Form {
         padding: 30px 25px;
     }
     
-    .login > header img {
-        width: 140px;
+    .login Form h1, .register Form h1 {
+        font-size: 1.75rem;
+    }
+    
+    .login img, .register img {
+        width: 180px;
     }
 }
