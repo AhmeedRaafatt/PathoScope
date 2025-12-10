@@ -23,11 +23,6 @@ export default function HematologySidebar() {
             icon: faCalendarCheck
         },
         {
-            name: 'Accession',
-            to: '/hematology/accession',
-            icon: faClipboardCheck
-        },
-        {
             name: 'Samples Dashboard',
             to: '/hematology/samples',
             icon: faTachometerAlt
@@ -36,11 +31,6 @@ export default function HematologySidebar() {
             name: 'Instrument Queue',
             to: '/hematology/queue',
             icon: faFlask
-        },
-        {
-            name: 'Results Entry',
-            to: '/hematology/results',
-            icon: faFileAlt
         },
         {
             name: 'Validation',
