@@ -8,8 +8,8 @@ from django.db import models
 class User(AbstractUser):
     # Defining the Roles based on your Project Document [cite: 2, 3, 4, 5, 6]
     PATIENT = 'patient'
-    LAB_TECH = 'lab_tech'
-    PATHOLOGIST = 'pathologist'
+    LAB_TECH = 'lab_tech' # hematologist
+    PATHOLOGIST = 'pathologist' #pathology
     ADMIN = 'admin'
 
     ROLE_CHOICES = [

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken', # For Sign In Tokens
     'accounts',                 # Your new app
     'patient_portal',
+    'hematology',
     'corsheaders'
 ]
 
