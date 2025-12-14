@@ -30,6 +30,14 @@ import QueueManagement, { action as completeAction } from './pages/hematology/Qu
 import ValidationResults from './pages/hematology/ValidationResults'
 // Note: ResultsEntry needs to be created separately as a standalone route page
 
+// Admin Dashboard
+import AdminLayout from './components/admin/AdminLayout'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import UserManagement from './pages/admin/UserManagement'
+import LabConfiguration from './pages/admin/LabConfiguration'
+import AuditLogs from './pages/admin/AuditLogs'
+import SystemBroadcasts from './pages/admin/SystemBroadcasts'
+
 import './styles/global.css'
 
 const router = createBrowserRouter(createRoutesFromElements(
@@ -65,6 +73,15 @@ const router = createBrowserRouter(createRoutesFromElements(
             <Route path="queue" element={<QueueManagement />} action={completeAction} />
             <Route path="validation" element={<ValidationResults />} />
             <Route path="results" element={<ValidationResults/>} action={queueAction} />
+        </Route>
+
+        {/* Admin Dashboard */}
+        <Route path="admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="config" element={<LabConfiguration />} />
+            <Route path="audit" element={<AuditLogs />} />
+            <Route path="broadcasts" element={<SystemBroadcasts />} />
         </Route>
     </Route>
 ))
