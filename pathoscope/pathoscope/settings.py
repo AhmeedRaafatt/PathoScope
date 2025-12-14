@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'accounts',                 # Your new app
     'patient_portal',
     'hematology',
+    'admin_dashboard',
     'corsheaders'
 ]
 
