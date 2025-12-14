@@ -4,10 +4,12 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Q
-
+from django.db.models import Count, Q, Sum
 # Import models from your other apps
-from patient_portal.models import Appointment, TestOrder
+from patient_portal.models import Appointment, TestOrder, Invoice
+
+
+
 from hematology.models import Sample, TestAnalyte
 
 # Import local models (Audit Log & Broadcast)
@@ -49,6 +51,14 @@ class AdminDashboardStatsView(APIView):
             completed=Count('id', filter=Q(status='report_ready'))
         )
 
+        # -- Invoice / Finance Stats (NEW) --
+        # 1. Calculate Total Revenue (Sum of 'amount' for all 'paid' invoices)
+        revenue_data = Invoice.objects.filter(payment_status__iexact='paid').aggregate(total_revenue=Sum('amount'))
+        total_revenue = revenue_data['total_revenue'] or 0.00  # Handle None if no invoices exist
+
+        # 2. Count Pending Invoices
+        pending_invoices = Invoice.objects.filter(payment_status__iexact='unpaid').count()
+
         data = {
             'total_patients': total_patients,
             'total_staff': total_staff,
@@ -59,8 +69,11 @@ class AdminDashboardStatsView(APIView):
             'samples_received': lab_stats['received'],
             'samples_in_analysis': lab_stats['in_analysis'],
             'reports_completed': lab_stats['completed'],
-        }
 
+            # New Fields
+            'total_revenue': total_revenue,
+            'pending_invoices': pending_invoices,
+        }
         return Response(data)
 
 

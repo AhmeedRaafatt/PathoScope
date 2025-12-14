@@ -7,7 +7,7 @@ from .views import (
     TestAnalyteDetailView,
     AuditLogListView,
     BroadcastManagerView,
-    ActiveBroadcastView
+    ActiveBroadcastView,
 )
 
 urlpatterns = [
