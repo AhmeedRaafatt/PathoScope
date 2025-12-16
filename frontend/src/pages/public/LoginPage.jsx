@@ -19,29 +19,38 @@ export async function action({ request }) {
     const data = await response.json();
 
     if (response.ok) {
+      // 1. Store Credentials
       localStorage.setItem('token', data.token);
       localStorage.setItem('username', data.username);
       localStorage.setItem('role', data.role);
       console.log("Login successful:", data);
+
+      // 2. Traffic Cop Logic (Corrected)
       if (data.role === 'patient') {
         return redirect('/patient');
-      } else if (data.role === 'lab_tech' || data.role === 'pathologist' || data.role === 'admin') {
+      }
+      else if (data.role === 'lab_tech' || data.role === 'admin') {
         return redirect('/hematology');
-      } else {
-        return redirect('/login'); // Unknown role? Send back to login
-      } 
+      }
+      else if (data.role === 'pathologist') {
+        return redirect('/pathologist/dashboard');
+      }
+      else {
+        // Fallback for unknown roles
+        return redirect('/');
+      }
 
-     } else {
-      return { 
+    } else {
+      return {
         error: data.error || data.detail || "Invalid username or password. Please try again.",
-        status: response.status 
+        status: response.status
       };
     }
   } catch (error) {
     console.error("Network Error:", error);
-    return { 
+    return {
       error: "Could not connect to server. Please check your connection and try again.",
-      networkError: true 
+      networkError: true
     };
   }
 }
@@ -59,7 +68,7 @@ export default function LoginPage() {
 
           {/* Error Alert */}
           {actionData && actionData.error && (
-            <div className="alert alert-error">
+            <div className="alert alert-error" style={{ color: 'red', fontWeight: 'bold', marginBottom: '1rem' }}>
               {actionData.error}
             </div>
           )}

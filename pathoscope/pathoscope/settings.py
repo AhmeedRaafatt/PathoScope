@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'accounts',                 # Your new app
     'patient_portal',
     'hematology',
-    'corsheaders'
+    'corsheaders',
+    'pathology'
 ]
 
 REST_FRAMEWORK = {
@@ -143,3 +144,6 @@ CORS_ALLOWED_ORIGINS = [
 
 # Allow credentials (tokens/cookies) to be sent in cross-origin requests during development
 CORS_ALLOW_CREDENTIALS = True
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
 
 // Public Pages
@@ -28,16 +27,22 @@ import ScheduledPatients, { action as accessionAction } from './pages/hematology
 import SamplesDashboard, { action as queueAction } from './pages/hematology/SamplesDashboard'
 import QueueManagement, { action as completeAction } from './pages/hematology/QueueManagement'
 import ValidationResults from './pages/hematology/ValidationResults'
-// Note: ResultsEntry needs to be created separately as a standalone route page
+
+// --- NEW PATHOLOGY IMPORTS ---
+import PathologistDashboard from './pages/pathology/PathologistDashboard';
+import ViewerPage from './pages/pathology/ViewerPage';
+// Add import
+import PathologyReport from './pages/pathology/PathologyReport';
 
 import './styles/global.css'
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/" element={<Layout />}>
+        {/* Public Routes */}
         <Route index element={<LandingPage />} />
         <Route path="login" element={<LoginPage />} action={loginAction} />
         <Route path="register" element={<RegisterPage />} action={registerAction} />
-        
+
         {/* Patient Portal */}
         <Route path="patient" element={<PatientLayout />} loader={patientLoader}>
             <Route index element={<PatientDashboard />} />
@@ -66,6 +71,16 @@ const router = createBrowserRouter(createRoutesFromElements(
             <Route path="validation" element={<ValidationResults />} />
             <Route path="results" element={<ValidationResults/>} action={queueAction} />
         </Route>
+
+        {/* --- NEW PATHOLOGY MODULE ROUTES --- */}
+        {/* We group them under /pathologist to keep the URL structure clean */}
+        <Route path="pathologist">
+            <Route path="dashboard" element={<PathologistDashboard />} />
+            <Route path="viewer/:id" element={<ViewerPage />} />
+            // Add to routes inside the Pathologist or Protected Route area
+            <Route path="/pathologist/report/:id" element={<PathologyReport />} />
+        </Route>
+
     </Route>
 ))
 
