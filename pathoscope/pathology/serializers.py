@@ -17,6 +17,8 @@ class PathologyCaseSerializer(serializers.ModelSerializer):
             'image_preview',  # <--- The PNG for the viewer
             'annotations',  # <--- Sending drawings to frontend
             'doctor_notes', # <--- Sending notes to frontend
-            'study_date'    # <--- Helping frontend sort for comparison
+            'study_date',  # <--- Helping frontend sort for comparison
+            'icd_code',
+            'icd_description'
         ]
         read_only_fields = ['uploaded_at', 'status', 'image_preview']

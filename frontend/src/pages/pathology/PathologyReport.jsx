@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPrint, faArrowLeft, faFileMedical } from '@fortawesome/free-solid-svg-icons';
-import logo from '../../assets/logo.png'; // Ensure you have your logo
+import { faPrint, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+// import logo from '../../assets/logo.png'; // Uncomment if you have a logo
 
 const PathologyReport = () => {
     const { id } = useParams();
@@ -14,6 +14,7 @@ const PathologyReport = () => {
         const fetchCase = async () => {
             const token = localStorage.getItem('token');
             try {
+                // Ensure your serializer includes 'icd_code' and 'icd_description'
                 const res = await fetch(`http://127.0.0.1:8000/api/pathology/list/`, {
                     headers: { 'Authorization': `Token ${token}` }
                 });
@@ -68,7 +69,7 @@ const PathologyReport = () => {
                 {/* Header */}
                 <div style={{ borderBottom: '3px solid #122056', paddingBottom: '20px', marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                        <img src={logo} alt="Logo" style={{ height: '60px' }} />
+                        {/* <img src={logo} alt="Logo" style={{ height: '60px' }} /> */}
                         <h1 style={{ margin: '10px 0 0 0', color: '#122056', fontSize: '24px' }}>PATHOLOGY DEPT.</h1>
                         <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Histopathology Examination Report</p>
                     </div>
@@ -97,6 +98,32 @@ const PathologyReport = () => {
                         <p style={{ margin: 0, fontWeight: 'bold' }}>Dr. Mounir (Internal)</p>
                     </div>
                 </div>
+
+                {/* --- NEW SECTION: ICD-10 DIAGNOSIS --- */}
+                <div style={{
+                    marginBottom: '30px',
+                    padding: '15px',
+                    backgroundColor: '#eef2ff',
+                    border: '1px solid #c7d2fe',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '20px'
+                }}>
+                    <div>
+                        <span style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase', display: 'block' }}>ICD-10 Code</span>
+                        <span style={{ fontSize: '22px', fontWeight: 'bold', color: '#d32f2f' }}>
+                            {caseData.icd_code || "PENDING"}
+                        </span>
+                    </div>
+                    <div style={{ borderLeft: '1px solid #c7d2fe', paddingLeft: '20px' }}>
+                        <span style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase', display: 'block' }}>Final Diagnosis</span>
+                        <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#122056' }}>
+                            {caseData.icd_description || "No diagnosis assigned yet."}
+                        </span>
+                    </div>
+                </div>
+                {/* -------------------------------------- */}
 
                 {/* The Slide Image */}
                 <div style={{ marginBottom: '30px', border: '1px solid #ddd', padding: '5px' }}>
@@ -139,7 +166,8 @@ const PathologyReport = () => {
                 @media print {
                     .no-print { display: none !important; }
                     body { background-color: white; }
-                    #print-area { box-shadow: none; padding: 0; width: 100%; }
+                    #print-area { box-shadow: none; padding: 0; width: 100%; margin: 0; }
+                    @page { margin: 20mm; }
                 }
             `}</style>
         </div>

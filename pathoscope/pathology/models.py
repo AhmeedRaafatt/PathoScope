@@ -32,6 +32,10 @@ class PathologyCase(models.Model):
 
     # Feature C: Comparison Logic
     study_date = models.DateField(null=True, blank=True)
+    # --- NEW: ICD-10 Integration ---
+    icd_code = models.CharField(max_length=20, blank=True, null=True)  # e.g., "C50.911"
+    icd_description = models.CharField(max_length=255, blank=True,
+                                       null=True)  # e.g., "Malignant neoplasm of right female breast"
 
     def save(self, *args, **kwargs):
         # 1. Save normally first so the file exists on disk
