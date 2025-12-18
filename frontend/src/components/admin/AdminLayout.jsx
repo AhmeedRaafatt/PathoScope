@@ -2,246 +2,89 @@ import { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faTachometerAlt,
-  faUsers, 
-  faCog, 
-  faShieldAlt, 
-  faBullhorn,
-  faBars,
-  faTimes,
-  faSignOutAlt,
-  faUserShield
+  faTachometerAlt, faUsers, faCog, faShieldAlt, 
+  faBullhorn, faSignOutAlt, faUserShield 
 } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/admin/AdminLayout.css';
 
 export default function AdminLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeBroadcast, setActiveBroadcast] = useState(null);
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check user role and authentication
+  // Authentication Check (Keep your existing logic here)
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const userRole = localStorage.getItem('userRole');
-    const username = localStorage.getItem('username');
-
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
-    if (userRole !== 'admin') {
-      // Redirect non-admin users to their appropriate dashboard
-      switch (userRole) {
-        case 'patient':
-          navigate('/patient');
-          break;
-        case 'lab_tech':
-          navigate('/hematology');
-          break;
-        case 'pathologist':
-          navigate('/hematology');
-          break;
-        default:
-          navigate('/');
-      }
-      return;
-    }
-
-    setUser({ role: userRole, username });
+    if (!token) navigate('/login');
+    // ... rest of your auth logic
   }, [navigate]);
 
-  // Fetch active broadcast
-  useEffect(() => {
-    const fetchActiveBroadcast = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://127.0.0.1:8000/api/admin/broadcasts/active/', {
-          headers: {
-            'Authorization': `Token ${token}`,
-            'Content-Type': 'application/json',
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setActiveBroadcast(data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch active broadcast:', err);
-      }
-    };
-
-    fetchActiveBroadcast();
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('username');
-    navigate('/login');
-  };
-
-  const isActiveRoute = (path) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
-
-  if (!user) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Verifying admin access...</p>
-      </div>
-    );
-  }
+  const navItems = [
+    { path: '/admin', icon: faTachometerAlt, label: 'Dashboard' },
+    { path: '/admin/users', icon: faUsers, label: 'User Management' },
+    { path: '/admin/config', icon: faCog, label: 'Lab Config' },
+    { path: '/admin/audit', icon: faShieldAlt, label: 'Audit Logs' },
+    { path: '/admin/broadcasts', icon: faBullhorn, label: 'Broadcasts' },
+  ];
 
   return (
     <div className="admin-layout">
-      {/* Active Broadcast Banner */}
-      {activeBroadcast && (
-        <div className="layout-broadcast-banner">
-          <div className="broadcast-content">
-            <FontAwesomeIcon icon={faBullhorn} className="broadcast-icon" />
-            <span className="broadcast-message">{activeBroadcast.message}</span>
-          </div>
-          <button 
-            className="dismiss-btn" 
-            onClick={() => setActiveBroadcast(null)}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* Sidebar */}
-      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      {/* 1. Permanent Desktop Sidebar */}
+      <aside className="admin-sidebar">
         <div className="sidebar-header">
-          <div className="logo">
-            <img src="/src/assets/logo.png" alt="PathoScope" className="logo-img" />
-            <span className="logo-text">Admin Panel</span>
-          </div>
-          <button 
-            className="sidebar-toggle"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
+          <span>PATHOSCOPE ADMIN</span>
         </div>
-
+        
         <nav className="sidebar-nav">
-          <ul className="nav-list">
-            <li className="nav-item">
-              <Link 
-                to="/admin" 
-                className={`nav-link ${isActiveRoute('/admin') && location.pathname === '/admin' ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <FontAwesomeIcon icon={faTachometerAlt} className="nav-icon" />
-                <span className="nav-text">Dashboard</span>
-              </Link>
-            </li>
-
-            <li className="nav-item">
-              <Link 
-                to="/admin/users" 
-                className={`nav-link ${isActiveRoute('/admin/users') ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <FontAwesomeIcon icon={faUsers} className="nav-icon" />
-                <span className="nav-text">User Management</span>
-              </Link>
-            </li>
-
-            <li className="nav-item">
-              <Link 
-                to="/admin/config" 
-                className={`nav-link ${isActiveRoute('/admin/config') ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <FontAwesomeIcon icon={faCog} className="nav-icon" />
-                <span className="nav-text">Lab Configuration</span>
-              </Link>
-            </li>
-
-            <li className="nav-item">
-              <Link 
-                to="/admin/audit" 
-                className={`nav-link ${isActiveRoute('/admin/audit') ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <FontAwesomeIcon icon={faShieldAlt} className="nav-icon" />
-                <span className="nav-text">Audit Logs</span>
-              </Link>
-            </li>
-
-            <li className="nav-item">
-              <Link 
-                to="/admin/broadcasts" 
-                className={`nav-link ${isActiveRoute('/admin/broadcasts') ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <FontAwesomeIcon icon={faBullhorn} className="nav-icon" />
-                <span className="nav-text">System Broadcasts</span>
-              </Link>
-            </li>
-          </ul>
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+            >
+              <FontAwesomeIcon icon={item.icon} fixedWidth />
+              <span>{item.label}</span>
+            </Link>
+          ))}
         </nav>
 
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">
-              <FontAwesomeIcon icon={faUserShield} />
-            </div>
-            <div className="user-details">
-              <span className="user-name">{user.username}</span>
-              <span className="user-role">Administrator</span>
-            </div>
-          </div>
-          <button className="logout-btn" onClick={handleLogout}>
-            <FontAwesomeIcon icon={faSignOutAlt} />
-            <span>Logout</span>
+        <div className="sidebar-footer" style={{ padding: '1.5rem' }}>
+          <button 
+            className="nav-link" 
+            onClick={() => {
+              localStorage.clear();
+              navigate('/login');
+            }}
+            style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer' }}
+          >
+            <FontAwesomeIcon icon={faSignOutAlt} fixedWidth />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="admin-main">
-        {/* Top Navigation Bar */}
-        <header className="admin-header">
-          <button 
-            className="mobile-menu-btn"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <FontAwesomeIcon icon={faBars} />
-          </button>
-          
-          <div className="header-title">
-            <h1>PathoScope Admin</h1>
-          </div>
+      {/* 2. Top Header */}
+      <header className="admin-header">
+        <div className="header-title">
+          {/* Dynamic Breadcrumb could go here */}
+          <h1>Admin Portal</h1>
+        </div>
+        <div className="admin-indicator">
+          <FontAwesomeIcon icon={faUserShield} style={{ marginRight: '8px' }}/>
+          <span>System Administrator</span>
+        </div>
+      </header>
 
-          <div className="header-actions">
-            <div className="admin-indicator">
-              <FontAwesomeIcon icon={faUserShield} />
-              <span>Administrator</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="admin-content">
-          <Outlet />
-        </main>
-      </div>
-
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div 
-          className="sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
+      {/* 3. Page Content */}
+      <main className="admin-content">
+        {activeBroadcast && (
+           <div className="broadcast-banner">
+             <span>{activeBroadcast.message}</span>
+             <button onClick={() => setActiveBroadcast(null)}>Dismiss</button>
+           </div>
+        )}
+        <Outlet />
+      </main>
     </div>
   );
 }

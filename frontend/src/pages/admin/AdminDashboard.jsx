@@ -232,52 +232,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </section>
-
-      {/* Quick Actions */}
-      <section className="quick-actions">
-        <h2 className="section-title">Quick Actions</h2>
-        <div className="actions-grid">
-          <Link to="/admin/users" className="action-card">
-            <div className="action-icon">
-              <FontAwesomeIcon icon={faUsers} />
-            </div>
-            <div className="action-content">
-              <h3>Manage Users</h3>
-              <p>Create, edit, and manage user accounts</p>
-            </div>
-          </Link>
-
-          <Link to="/admin/config" className="action-card">
-            <div className="action-icon">
-              <FontAwesomeIcon icon={faCog} />
-            </div>
-            <div className="action-content">
-              <h3>Lab Configuration</h3>
-              <p>Configure test analytes and normal ranges</p>
-            </div>
-          </Link>
-
-          <Link to="/admin/audit" className="action-card">
-            <div className="action-icon">
-              <FontAwesomeIcon icon={faShieldAlt} />
-            </div>
-            <div className="action-content">
-              <h3>Audit Logs</h3>
-              <p>Review system activity and changes</p>
-            </div>
-          </Link>
-
-          <Link to="/admin/broadcasts" className="action-card">
-            <div className="action-icon">
-              <FontAwesomeIcon icon={faBullhorn} />
-            </div>
-            <div className="action-content">
-              <h3>System Broadcasts</h3>
-              <p>Send announcements to all users</p>
-            </div>
-          </Link>
-        </div>
-      </section>
     </main>
   );
 }
