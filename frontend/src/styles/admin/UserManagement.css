@@ -10,6 +10,8 @@
   margin-bottom: var(--spacing-6);
   padding-bottom: var(--spacing-4);
   border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
 }
 
 .page-header h1 {
@@ -67,10 +69,19 @@
   transition: border-color var(--transition-fast);
 }
 
+.search-bar input:hover {
+  border-color: var(--col-primary-light);
+}
+
 .search-bar input:focus {
   outline: none;
   border-color: var(--col-primary);
-  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+  box-shadow: var(--focus-ring);
+}
+
+.search-bar input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .filter-dropdown {
@@ -106,10 +117,14 @@
   transition: border-color var(--transition-fast);
 }
 
+.filter-dropdown select:hover {
+  border-color: var(--col-primary-light);
+}
+
 .filter-dropdown select:focus {
   outline: none;
   border-color: var(--col-primary);
-  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+  box-shadow: var(--focus-ring);
 }
 
 /* Users Table */
@@ -217,6 +232,10 @@
   font-size: 0.9375rem;
 }
 
+.username:hover {
+  color: var(--col-primary);
+}
+
 .user-id {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -245,6 +264,11 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border: 1px solid transparent;
+  transition: transform var(--transition-fast);
+}
+
+.role-badge:hover {
+  transform: scale(1.05);
 }
 
 .role-badge.patient {
@@ -287,6 +311,11 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border: 1px solid transparent;
+  transition: transform var(--transition-fast);
+}
+
+.status-badge:hover {
+  transform: scale(1.05);
 }
 
 .status-badge.active {
@@ -354,6 +383,10 @@
 .action-btn.delete:hover {
   background: var(--col-danger);
   color: white;
+}
+
+.action-btn:focus-visible {
+  outline: var(--focus-ring);
 }
 
 /* Empty State */

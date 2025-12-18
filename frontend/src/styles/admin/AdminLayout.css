@@ -1,5 +1,5 @@
 /* =========================================
-   ADMIN LAYOUT - Professional Medical Design
+   ADMIN LAYOUT - Professional Medical Design (FINAL FIX)
    ========================================= */
 
    .admin-layout {
@@ -55,91 +55,112 @@
     gap: var(--spacing-1);
   }
   
-  .nav-link {
+  /* CRITICAL FIX: Ultra-specific selector and forced colors */
+  .sidebar-nav > .nav-link {
     display: flex;
     align-items: center;
     gap: var(--spacing-3);
     padding: var(--spacing-3) var(--spacing-4);
     border-radius: var(--radius-md);
-    color: var(--text-light);
+    color: var(--text-light) !important; /* Light gray text */
     text-decoration: none;
-    transition: all var(--transition-base);
+    transition: transform var(--transition-base), background-color var(--transition-base), color var(--transition-base);
     font-weight: 500;
     font-size: 0.9375rem;
     position: relative;
     border: 2px solid transparent;
+    background: transparent;
+    min-height: 48px;
   }
   
-  .nav-link:hover {
-    background: var(--bg-sidebar-hover);
-    color: #ffffff;
+  /* CRITICAL FIX: Ensure hover background is DARK */
+  .sidebar-nav > .nav-link:hover {
+    background: var(--bg-sidebar-hover) !important; /* #2d3748 - dark gray */
+    color: #ffffff !important; /* White text */
     transform: translateX(4px);
   }
   
-  .nav-link.active {
-    background: linear-gradient(90deg, var(--col-primary) 0%, var(--col-primary-light) 100%);
-    color: #ffffff;
+  /* CRITICAL FIX: Active state uses gradient background */
+  .sidebar-nav > .nav-link.active {
+    background: linear-gradient(90deg, var(--col-primary) 0%, var(--col-primary-light) 100%) !important;
+    color: #ffffff !important;
     box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
     font-weight: 600;
   }
   
-  .nav-link:focus-visible {
+  /* CRITICAL FIX: Focus visible with proper contrast */
+  .sidebar-nav > .nav-link:focus-visible {
     outline: none;
     border-color: #60a5fa;
     box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
+    color: #ffffff !important; /* Ensure text is white when focused */
+    background: var(--bg-sidebar-hover) !important;
   }
   
-  .nav-link svg {
+  /* CRITICAL FIX: Icon styles */
+  .sidebar-nav > .nav-link svg {
     width: 20px;
     height: 20px;
     opacity: 0.9;
     flex-shrink: 0;
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
+    color: inherit !important; /* Inherit color from parent */
   }
   
-  .nav-link.active svg {
+  .sidebar-nav > .nav-link:hover svg,
+  .sidebar-nav > .nav-link:focus-visible svg {
+    opacity: 1;
+    transform: scale(1.1);
+    color: #ffffff !important; /* White icon on hover/focus */
+  }
+  
+  .sidebar-nav > .nav-link.active svg {
     opacity: 1;
     transform: scale(1.1);
   }
   
+  /* CRITICAL FIX: Separate logout button with explicit styles */
   .sidebar-footer {
     padding: var(--spacing-6);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
   
-  .sidebar-footer .user-info {
+  .sidebar-footer .logout-btn {
     display: flex;
     align-items: center;
     gap: var(--spacing-3);
-    margin-bottom: var(--spacing-4);
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--radius-md);
+    color: var(--text-light) !important;
+    background: transparent !important;
+    border: 2px solid transparent;
+    cursor: pointer;
+    width: 100%;
+    transition: all var(--transition-base);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-align: left;
+    min-height: 48px;
   }
   
-  .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--col-primary) 0%, var(--col-accent) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    font-size: 0.875rem;
+  .sidebar-footer .logout-btn:hover {
+    background: var(--bg-sidebar-hover) !important;
+    color: #ffffff !important;
+    transform: translateX(4px);
   }
   
-  .user-details {
-    flex: 1;
+  .sidebar-footer .logout-btn:focus-visible {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
+    color: #ffffff !important;
+    background: var(--bg-sidebar-hover) !important;
   }
   
-  .user-details .user-name {
-    font-weight: 600;
-    color: #ffffff;
-    font-size: 0.875rem;
-  }
-  
-  .user-details .user-role {
-    color: var(--text-light);
-    font-size: 0.75rem;
-    margin-top: 2px;
+  .sidebar-footer .logout-btn svg {
+    width: 20px;
+    height: 20px;
+    color: inherit !important;
   }
   
   /* Admin Header */
@@ -239,7 +260,7 @@
     min-height: calc(100vh - var(--header-height));
   }
   
-  /* Broadcast Banner - Enhanced */
+  /* Broadcast Banner */
   .broadcast-banner {
     background: linear-gradient(90deg, var(--col-warning-bg) 0%, #fef3c7 100%);
     border: 1px solid #fbbf24;
@@ -338,7 +359,7 @@
       padding: var(--spacing-4);
     }
     
-    .nav-link:focus-visible {
+    .sidebar-nav > .nav-link:focus-visible {
       outline-offset: -2px;
     }
   }

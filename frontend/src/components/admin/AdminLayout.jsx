@@ -50,7 +50,7 @@ export default function AdminLayout() {
 
         <div className="sidebar-footer" style={{ padding: '1.5rem' }}>
           <button 
-            className="nav-link" 
+            className="logout-btn" 
             onClick={() => {
               localStorage.clear();
               navigate('/login');

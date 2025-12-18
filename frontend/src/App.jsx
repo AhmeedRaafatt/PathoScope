@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
 
 // Public Pages
@@ -28,7 +27,6 @@ import ScheduledPatients, { action as accessionAction } from './pages/hematology
 import SamplesDashboard, { action as queueAction } from './pages/hematology/SamplesDashboard'
 import QueueManagement, { action as completeAction } from './pages/hematology/QueueManagement'
 import ValidationResults from './pages/hematology/ValidationResults'
-// Note: ResultsEntry needs to be created separately as a standalone route page
 
 // Admin Dashboard
 import AdminLayout from './components/admin/AdminLayout'
@@ -41,49 +39,52 @@ import SystemBroadcasts from './pages/admin/SystemBroadcasts'
 import './styles/global.css'
 
 const router = createBrowserRouter(createRoutesFromElements(
-    <Route path="/" element={<Layout />}>
-        <Route index element={<LandingPage />} />
-        <Route path="login" element={<LoginPage />} action={loginAction} />
-        <Route path="register" element={<RegisterPage />} action={registerAction} />
-        
-        {/* Patient Portal */}
-        <Route path="patient" element={<PatientLayout />} loader={patientLoader}>
-            <Route index element={<PatientDashboard />} />
-            <Route path="profile" element={<PatientProfile />} />
-            <Route path="appointments" element={<PatientAppoinmentsLayout />}>
-                <Route index element={<ViewAppointments />} />
-                <Route path="book" element={<BookAppointment />} action={BookAppointmentAction} />
-            </Route>
-            <Route path="results" element={<PatientResultsLayout />}>
-                <Route index element={<ViewResults />} />
-                <Route path="hematology" element={<ResultsHematology />} />
-                <Route path="pathology" element={<ResultsPathology />} />
-            </Route>
-            <Route path="billings" element={<PatientBillingsLayout />}>
-                <Route index element={<ViewInvoices />} />
-            </Route>
+  <>
+    {/* Routes WITH Footer */}
+    <Route element={<Layout />}>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="login" element={<LoginPage />} action={loginAction} />
+      <Route path="register" element={<RegisterPage />} action={registerAction} />
+      
+      {/* Patient Portal */}
+      <Route path="patient" element={<PatientLayout />} loader={patientLoader}>
+        <Route index element={<PatientDashboard />} />
+        <Route path="profile" element={<PatientProfile />} />
+        <Route path="appointments" element={<PatientAppoinmentsLayout />}>
+          <Route index element={<ViewAppointments />} />
+          <Route path="book" element={<BookAppointment />} action={BookAppointmentAction} />
         </Route>
+        <Route path="results" element={<PatientResultsLayout />}>
+          <Route index element={<ViewResults />} />
+          <Route path="hematology" element={<ResultsHematology />} />
+          <Route path="pathology" element={<ResultsPathology />} />
+        </Route>
+        <Route path="billings" element={<PatientBillingsLayout />}>
+          <Route index element={<ViewInvoices />} />
+        </Route>
+      </Route>
 
-        {/* Hematology Module */}
-        <Route path="hematology" element={<HematologyLayout />} loader={hematologyLoader}>
-            <Route index element={<HematologyDashboard />} />
-            <Route path="scheduled" element={<ScheduledPatients />} action={accessionAction} />
-            <Route path="accession" element={<ScheduledPatients />} action={accessionAction} />
-            <Route path="samples" element={<SamplesDashboard />} action={queueAction} />
-            <Route path="queue" element={<QueueManagement />} action={completeAction} />
-            <Route path="validation" element={<ValidationResults />} />
-            <Route path="results" element={<ValidationResults/>} action={queueAction} />
-        </Route>
-
-        {/* Admin Dashboard */}
-        <Route path="admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="config" element={<LabConfiguration />} />
-            <Route path="audit" element={<AuditLogs />} />
-            <Route path="broadcasts" element={<SystemBroadcasts />} />
-        </Route>
+      {/* Hematology Module */}
+      <Route path="hematology" element={<HematologyLayout />} loader={hematologyLoader}>
+        <Route index element={<HematologyDashboard />} />
+        <Route path="scheduled" element={<ScheduledPatients />} action={accessionAction} />
+        <Route path="accession" element={<ScheduledPatients />} action={accessionAction} />
+        <Route path="samples" element={<SamplesDashboard />} action={queueAction} />
+        <Route path="queue" element={<QueueManagement />} action={completeAction} />
+        <Route path="validation" element={<ValidationResults />} />
+        <Route path="results" element={<ValidationResults/>} action={queueAction} />
+      </Route>
     </Route>
+
+    {/* Routes WITHOUT Footer - Admin Portal */}
+    <Route path="/admin" element={<AdminLayout />}>
+      <Route index element={<AdminDashboard />} />
+      <Route path="users" element={<UserManagement />} />
+      <Route path="config" element={<LabConfiguration />} />
+      <Route path="audit" element={<AuditLogs />} />
+      <Route path="broadcasts" element={<SystemBroadcasts />} />
+    </Route>
+  </>
 ))
 
 function App() {
