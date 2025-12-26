@@ -8,40 +8,65 @@ from django.conf import settings
 
 
 class PathologyCase(models.Model):
+    # Status choices
+    SAMPLE_RECEIVED = 'sample_received'
+    AWAITING_REVIEW = 'awaiting_review'
+    IN_REVIEW = 'in_review'
+    REPORT_READY = 'report_ready'
+    
+    STATUS_CHOICES = [
+        (SAMPLE_RECEIVED, 'Sample Received'),
+        (AWAITING_REVIEW, 'Awaiting Pathologist Review'),
+        (IN_REVIEW, 'In Review'),
+        (REPORT_READY, 'Report Ready'),
+    ]
+    
     # 1. Link to Patient
     patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='pathology_cases')
+    
+    # Link to TestOrder
+    test_order = models.OneToOneField('patient_portal.TestOrder', on_delete=models.CASCADE, related_name='pathology_case', null=True, blank=True)
 
-    # 2. The DICOM File
-    dicom_file = models.FileField(upload_to='dicom_slides/')
+    # 2. Accessioning fields
+    accession_number = models.CharField(max_length=50, unique=True, blank=True)
+    barcode = models.CharField(max_length=100, unique=True, blank=True)
+    
+    # 3. The DICOM File
+    dicom_file = models.FileField(upload_to='dicom_slides/', blank=True, null=True)
 
-    # --- NEW: The Preview Image (Auto-Generated) ---
+    # Preview Image (Auto-Generated)
     image_preview = models.ImageField(upload_to='dicom_previews/', blank=True, null=True)
 
-    # 3. Metadata for Organization & Comparison
+    # 4. Metadata for Organization & Comparison
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, default='Pending Review')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=SAMPLE_RECEIVED)
     body_part_examined = models.CharField(max_length=100, blank=True)
 
-    # --- Advanced Features Support (Retained) ---
+    # 5. Annotations & Measurements
+    annotations = models.JSONField(default=list, blank=True)
 
-    # Feature A: Annotations & Measurements
-    annotations = models.JSONField(default=dict, blank=True)
+    # 6. Pathologist Report
+    pathologist_notes = models.TextField(blank=True, null=True)
+    doctor_notes = models.TextField(blank=True, null=True)  # Keep for AI compatibility
+    
+    # 7. Report Finalization
+    is_finalized = models.BooleanField(default=False)
+    finalized_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='finalized_cases')
+    finalized_date = models.DateTimeField(null=True, blank=True)
+    report_pdf = models.FileField(upload_to='pathology_reports/', blank=True, null=True)
 
-    # Feature B: Notes
-    doctor_notes = models.TextField(blank=True, null=True)
-
-    # Feature C: Comparison Logic
+    # 8. Comparison Logic
     study_date = models.DateField(null=True, blank=True)
-    # --- NEW: ICD-10 Integration ---
-    icd_code = models.CharField(max_length=20, blank=True, null=True)  # e.g., "C50.911"
-    icd_description = models.CharField(max_length=255, blank=True,
-                                       null=True)  # e.g., "Malignant neoplasm of right female breast"
+    
+    # 9. ICD-10 Integration
+    icd_code = models.CharField(max_length=20, blank=True, null=True)
+    icd_description = models.CharField(max_length=255, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        # 1. Save normally first so the file exists on disk
+        # Save normally first so the file exists on disk
         super().save(*args, **kwargs)
 
-        # 2. If we have a DICOM but no preview, try to generate one
+        # If we have a DICOM but no preview, try to generate one
         if self.dicom_file and not self.image_preview:
             try:
                 self.generate_preview()
@@ -53,16 +78,14 @@ class PathologyCase(models.Model):
         Reads the DICOM file, converts the pixel data to a standard PNG image,
         and saves it to the image_preview field.
         """
-        # Read the DICOM file from disk
         ds = pydicom.dcmread(self.dicom_file.path)
 
-        # Extract pixel data
         if not hasattr(ds, 'pixel_array'):
-            return  # Skip if no image data found
+            return
 
         pixel_array = ds.pixel_array.astype(float)
 
-        # Normalize pixels to 0-255 range (Standard Image format)
+        # Normalize pixels to 0-255 range
         if pixel_array.max() > 0:
             scaled_image = (np.maximum(pixel_array, 0) / pixel_array.max()) * 255.0
         else:
@@ -77,14 +100,13 @@ class PathologyCase(models.Model):
         buffer = BytesIO()
         image.save(buffer, format="PNG")
 
-        # Save to Django field (without triggering recursion)
+        # Save to Django field
         file_name = f"preview_{self.id}.png"
         self.image_preview.save(file_name, ContentFile(buffer.getvalue()), save=False)
 
-        # Attempt to grab Study Date from DICOM metadata if not set
+        # Grab Study Date from DICOM metadata if not set
         if not self.study_date and hasattr(ds, 'StudyDate'):
             try:
-                # DICOM date format is usually YYYYMMDD
                 d_str = ds.StudyDate
                 if d_str:
                     from datetime import datetime

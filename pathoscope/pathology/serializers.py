@@ -3,6 +3,7 @@ from .models import PathologyCase
 
 class PathologyCaseSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='patient.username', read_only=True)
+    finalized_by_name = serializers.CharField(source='finalized_by.username', read_only=True)
 
     class Meta:
         model = PathologyCase
@@ -10,15 +11,25 @@ class PathologyCaseSerializer(serializers.ModelSerializer):
             'id',
             'patient',
             'patient_name',
+            'test_order',
+            'accession_number',
+            'barcode',
             'dicom_file',
             'uploaded_at',
             'status',
             'body_part_examined',
-            'image_preview',  # <--- The PNG for the viewer
-            'annotations',  # <--- Sending drawings to frontend
-            'doctor_notes', # <--- Sending notes to frontend
-            'study_date',  # <--- Helping frontend sort for comparison
+            'image_preview',
+            'annotations',
+            'pathologist_notes',
+            'doctor_notes',
+            'is_finalized',
+            'finalized_by',
+            'finalized_by_name',
+            'finalized_date',
+            'report_pdf',
+            'study_date',
             'icd_code',
             'icd_description'
         ]
-        read_only_fields = ['uploaded_at', 'status', 'image_preview']
+        read_only_fields = ['uploaded_at', 'image_preview', 'accession_number', 'barcode', 
+                           'is_finalized', 'finalized_by', 'finalized_date', 'report_pdf']
