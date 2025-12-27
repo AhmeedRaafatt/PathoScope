@@ -16,7 +16,7 @@ const PathologistDashboard = () => {
 
     // Sidebar Configuration
     const features = [
-        { name: 'Dashboard', to: '/pathologist/dashboard', icon: faList },
+        { name: 'Dashboard', to: '/pathology', icon: faList },
     ];
 
     useEffect(() => {
@@ -142,7 +142,7 @@ const PathologistDashboard = () => {
                                                 {item.status || 'Pending'}
                                             </span>
                                             <button
-                                                onClick={() => navigate(`/pathologist/viewer/${item.id}`, { state: { fileUrl: item.dicom_file } })}
+                                                onClick={() => navigate(`/pathology/viewer/${item.id}`, { state: { fileUrl: item.dicom_file } })}
                                                 style={{
                                                     padding: '10px 20px', borderRadius: '6px', border: '1px solid #122056',
                                                     backgroundColor: 'transparent', color: '#122056', cursor: 'pointer', fontWeight: '600'

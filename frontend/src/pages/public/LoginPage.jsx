@@ -33,7 +33,7 @@ export async function action({ request }) {
         return redirect('/hematology');
       }
       else if (data.role === 'pathologist') {
-        return redirect('/pathologist/dashboard');
+        return redirect('/pathology');
       }
       else {
         // Fallback for unknown roles

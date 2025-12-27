@@ -1,7 +1,7 @@
 import { Outlet, redirect, useLoaderData, useRevalidator } from "react-router-dom"
 import { useState, useCallback, useEffect } from "react"
-import HematologySidebar from "../../components/HematologySidebar"
-import '../../styles/hematology/Layout.css'
+import PathologySidebar from "../../components/PathologySidebar"
+import '../../styles/pathology/Layout.css'
 
 // Utility function to check authentication
 export function requireAuth() {
@@ -25,62 +25,41 @@ async function safeJson(res) {
     }
 }
 
-// Enhanced loader - includes pathology scheduled data
+// Main loader for Pathology module
 export async function loader() {
     const token = requireAuth()
-    const hemBase = 'http://127.0.0.1:8000/api/hematology'
-    const pathBase = 'http://127.0.0.1:8000/api/pathology'
+    const base = 'http://127.0.0.1:8000/api/pathology'
     const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Token ${token}`
     }
 
     try {
-        const [
-            scheduledRes, 
-            dashboardRes, 
-            queueRes, 
-            analytesRes,
-            pathScheduledRes
-        ] = await Promise.all([
-            fetch(`${hemBase}/scheduled-patients/`, { headers }),
-            fetch(`${hemBase}/dashboard/`, { headers }),
-            fetch(`${hemBase}/queue/`, { headers }),
-            fetch(`${hemBase}/analytes/`, { headers }),
-            fetch(`${pathBase}/scheduled-patients/`, { headers })  // Add pathology
+        // Fetch scheduled patients and queue in parallel
+        const [scheduledRes, queueRes] = await Promise.all([
+            fetch(`${base}/scheduled-patients/`, { headers }),
+            fetch(`${base}/queue/`, { headers })
         ])
 
         // Check for auth errors
-        const allResponses = [scheduledRes, dashboardRes, queueRes, analytesRes, pathScheduledRes]
+        const allResponses = [scheduledRes, queueRes]
         if (allResponses.some(r => r.status === 401 || r.status === 403)) {
             localStorage.removeItem('token')
             throw redirect('/login')
         }
 
-        const [
-            scheduledPatients, 
-            samples, 
-            queue, 
-            analytes,
-            pathologyScheduled
-        ] = await Promise.all([
+        const [scheduledPatients, queue] = await Promise.all([
             safeJson(scheduledRes),
-            safeJson(dashboardRes),
-            safeJson(queueRes),
-            safeJson(analytesRes),
-            safeJson(pathScheduledRes)
+            safeJson(queueRes)
         ])
 
         return {
             scheduledPatients: Array.isArray(scheduledPatients) ? scheduledPatients : [],
-            samples: Array.isArray(samples) ? samples : [],
             queue: Array.isArray(queue) ? queue : [],
-            analytes: Array.isArray(analytes) ? analytes : [],
-            pathologyScheduled: Array.isArray(pathologyScheduled) ? pathologyScheduled : [],
             error: null
         }
     } catch (error) {
-        console.error('Error loading hematology data:', error)
+        console.error('Error loading pathology data:', error)
         
         // If it's a redirect, rethrow it
         if (error instanceof Response) {
@@ -90,16 +69,13 @@ export async function loader() {
         // Return error state instead of redirecting for network errors
         return {
             scheduledPatients: [],
-            samples: [],
             queue: [],
-            analytes: [],
-            pathologyScheduled: [],
             error: 'Failed to load data. Please check your connection and try again.'
         }
     }
 }
 
-export default function HematologyLayout() {
+export default function PathologyLayout() {
     const loaderData = useLoaderData()
     const revalidator = useRevalidator()
     const [contextData, setContextData] = useState(loaderData)
@@ -115,10 +91,10 @@ export default function HematologyLayout() {
     }, [revalidator])
 
     return (
-        <main className="hematology-layout">
-            <HematologySidebar />
-            <div className="hematology-content">
-                <div className="hematology-main-wrapper">
+        <main className="pathology-layout">
+            <PathologySidebar />
+            <div className="pathology-content">
+                <div className="pathology-main-wrapper">
                     {contextData.error && (
                         <div className="alert alert-error" style={{marginBottom: '20px'}}>
                             ⚠️ {contextData.error}

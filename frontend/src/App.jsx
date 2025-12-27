@@ -27,12 +27,15 @@ import ScheduledPatients, { action as accessionAction } from './pages/hematology
 import SamplesDashboard, { action as queueAction } from './pages/hematology/SamplesDashboard'
 import QueueManagement, { action as completeAction } from './pages/hematology/QueueManagement'
 import ValidationResults from './pages/hematology/ValidationResults'
+import UploadSlides, { action as uploadAction } from './pages/hematology/UploadSlides'
 
-// --- NEW PATHOLOGY IMPORTS ---
-import PathologistDashboard from './pages/pathology/PathologistDashboard';
-import ViewerPage from './pages/pathology/ViewerPage';
-// Add import
-import PathologyReport from './pages/pathology/PathologyReport';
+// Pathology Module (Pathologist Only)
+import PathologyLayout , {loader as pathologyLoader} from './pages/pathology/pathologyLayout'
+import PathologyDashboard from './pages/pathology/PathologyDashboard'
+import PathologyQueue from './pages/pathology/PathologyQueue'
+import AllCases from './pages/pathology/AllCases'
+import ViewerPage from './pages/pathology/ViewerPage'
+import PathologyReport from './pages/pathology/PathologyReport'
 
 import './styles/global.css'
 
@@ -61,26 +64,24 @@ const router = createBrowserRouter(createRoutesFromElements(
             </Route>
         </Route>
 
-        {/* Hematology Module */}
+        {/* Hematology Module (Lab Tech - Handles Both Types) */}
         <Route path="hematology" element={<HematologyLayout />} loader={hematologyLoader}>
             <Route index element={<HematologyDashboard />} />
             <Route path="scheduled" element={<ScheduledPatients />} action={accessionAction} />
-            <Route path="accession" element={<ScheduledPatients />} action={accessionAction} />
             <Route path="samples" element={<SamplesDashboard />} action={queueAction} />
             <Route path="queue" element={<QueueManagement />} action={completeAction} />
             <Route path="validation" element={<ValidationResults />} />
-            <Route path="results" element={<ValidationResults/>} action={queueAction} />
+            <Route path="upload" element={<UploadSlides />} action={uploadAction} />
         </Route>
 
-        {/* --- NEW PATHOLOGY MODULE ROUTES --- */}
-        {/* We group them under /pathologist to keep the URL structure clean */}
-        <Route path="pathologist">
-            <Route path="dashboard" element={<PathologistDashboard />} />
+        {/* Pathology Module (Pathologist Only) */}
+        <Route path="pathology" element={<PathologyLayout />} loader={pathologyLoader}>
+            <Route index element={<PathologyDashboard />} />
+            <Route path="queue" element={<PathologyQueue />} />
+            <Route path="cases" element={<AllCases />} />
             <Route path="viewer/:id" element={<ViewerPage />} />
-            // Add to routes inside the Pathologist or Protected Route area
-            <Route path="/pathologist/report/:id" element={<PathologyReport />} />
+            <Route path="report/:id" element={<PathologyReport />} />
         </Route>
-
     </Route>
 ))
 

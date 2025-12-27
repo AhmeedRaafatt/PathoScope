@@ -1,24 +1,18 @@
-import { useOutletContext, useActionData, useNavigation, Form } from 'react-router-dom'
+import { useOutletContext, useNavigate, useActionData, useNavigation, Form } from 'react-router-dom'
+import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarCheck, faUserCheck, faClipboardCheck, faClock } from '@fortawesome/free-solid-svg-icons'
-import '../../styles/hematology/ScheduledPatients.css'
+import '../../styles/pathology/ScheduledBiopsies.css'
 
-// Action to handle sample accession (Check In) - Supports both types
+// Action to handle sample accession (Check In)
 export async function action({ request }) {
     const token = localStorage.getItem('token')
     const formData = await request.formData()
     const testOrderId = formData.get('testOrderId')
     const patientName = formData.get('patientName')
-    const testName = formData.get('testName')
-    const testType = formData.get('testType')
 
     try {
-        // Use appropriate endpoint based on test type
-        const endpoint = testType === 'pathology' 
-            ? 'http://127.0.0.1:8000/api/pathology/accession/'
-            : 'http://127.0.0.1:8000/api/hematology/accession/'
-
-        const response = await fetch(endpoint, {
+        const response = await fetch('http://127.0.0.1:8000/api/pathology/accession/', {
             method: 'POST',
             headers: {
                 'Authorization': `Token ${token}`,
@@ -37,26 +31,13 @@ export async function action({ request }) {
             }
         }
 
-        // Return appropriate response based on type
-        if (testType === 'pathology') {
-            return {
-                success: true,
-                testType: 'pathology',
-                message: `Successfully checked in ${patientName} for ${testName}`,
-                caseId: data.id,
-                accessionNumber: data.accession_number,
-                barcode: data.barcode,
-                testOrderId
-            }
-        } else {
-            return {
-                success: true,
-                testType: 'hematology',
-                message: `Successfully checked in ${patientName} for ${testName}`,
-                accessionNumber: data.accession_number,
-                barcode: data.barcode,
-                testOrderId
-            }
+        return {
+            success: true,
+            message: `Successfully checked in ${patientName}`,
+            caseId: data.id,
+            accessionNumber: data.accession_number,
+            barcode: data.barcode,
+            testOrderId
         }
     } catch (error) {
         console.error('Check-in error:', error)
@@ -68,19 +49,22 @@ export async function action({ request }) {
     }
 }
 
-export default function ScheduledPatients() {
+export default function ScheduledBiopsies() {
     const context = useOutletContext()
+    const navigate = useNavigate()
     const actionData = useActionData()
     const navigation = useNavigation()
     
-    // Combine hematology and pathology scheduled patients
-    const hematologyPatients = Array.isArray(context?.scheduledPatients) ? context.scheduledPatients : []
-    const pathologyPatients = Array.isArray(context?.pathologyScheduled) ? context.pathologyScheduled : []
-    const allPatients = [...hematologyPatients, ...pathologyPatients]
-    
+    const scheduledPatients = context?.scheduledPatients || []
     const isRefreshing = context?.isRefreshing || false
     const isSubmitting = navigation.state === 'submitting'
     const submittingFormData = navigation.formData
+    const [uploadModalCaseId, setUploadModalCaseId] = useState(null)
+
+    // Auto-redirect to upload after successful check-in
+    if (actionData?.success && actionData?.caseId && !uploadModalCaseId) {
+        setUploadModalCaseId(actionData.caseId)
+    }
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -97,7 +81,7 @@ export default function ScheduledPatients() {
     }
 
     // Group appointments by date
-    const groupedAppointments = allPatients.reduce((groups, patient) => {
+    const groupedAppointments = scheduledPatients.reduce((groups, patient) => {
         const date = patient.appointment_date
         if (!groups[date]) {
             groups[date] = []
@@ -106,20 +90,18 @@ export default function ScheduledPatients() {
         return groups
     }, {})
 
-    // Sort dates
     const sortedDates = Object.keys(groupedAppointments).sort()
 
     return (
-        <div className="scheduled-patients-container">
+        <div className="scheduled-biopsies-container">
             <header className="page-header">
                 <div>
                     <h1 className="page-title">
                         <FontAwesomeIcon icon={faCalendarCheck} className="title-icon" />
-                        Scheduled Patients
+                        Scheduled Biopsies
                     </h1>
                     <p className="page-subtitle">
-                        {allPatients.length} confirmed appointment{allPatients.length !== 1 ? 's' : ''} ready for check-in
-                        {' '}({hematologyPatients.length} Hematology, {pathologyPatients.length} Pathology)
+                        {scheduledPatients.length} confirmed appointment{scheduledPatients.length !== 1 ? 's' : ''} ready for check-in
                     </p>
                 </div>
                 <button 
@@ -139,24 +121,9 @@ export default function ScheduledPatients() {
                         <strong>✓ {actionData.message}</strong>
                         {actionData.accessionNumber && (
                             <div style={{marginTop: '4px', fontSize: '13px'}}>
-                                Accession: <code style={{
-                                    background: 'rgba(0,0,0,0.1)', 
-                                    padding: '2px 6px', 
-                                    borderRadius: '4px',
-                                    fontWeight: 600
-                                }}>{actionData.accessionNumber}</code>
+                                Accession: <code>{actionData.accessionNumber}</code>
                                 {' • '}
-                                Barcode: <code style={{
-                                    background: 'rgba(0,0,0,0.1)', 
-                                    padding: '2px 6px', 
-                                    borderRadius: '4px',
-                                    fontWeight: 600
-                                }}>{actionData.barcode}</code>
-                            </div>
-                        )}
-                        {actionData.testType === 'pathology' && (
-                            <div style={{marginTop: '8px', fontSize: '13px', color: '#2563eb'}}>
-                                → Next: Upload DICOM slide at <a href="/hematology/upload" style={{fontWeight: 'bold'}}>Upload Slides</a>
+                                Barcode: <code>{actionData.barcode}</code>
                             </div>
                         )}
                     </div>
@@ -176,9 +143,9 @@ export default function ScheduledPatients() {
                 <div className="empty-state" style={{padding: '80px 20px'}}>
                     <FontAwesomeIcon icon={faCalendarCheck} className="empty-icon" style={{fontSize: '64px', marginBottom: '20px'}} />
                     <h3 style={{color: '#122056', marginBottom: '8px', fontSize: '20px'}}>No Scheduled Appointments</h3>
-                    <p style={{color: '#6b7280'}}>There are no confirmed appointments at this time.</p>
+                    <p style={{color: '#6b7280'}}>There are no confirmed biopsy appointments at this time.</p>
                 </div>
-            ) : isRefreshing && allPatients.length === 0 ? (
+            ) : isRefreshing && scheduledPatients.length === 0 ? (
                 <div className="loading-state" style={{padding: '60px 20px', textAlign: 'center'}}>
                     <div style={{fontSize: '40px', marginBottom: '16px'}}>⏳</div>
                     <p>Loading appointments...</p>
@@ -220,9 +187,7 @@ export default function ScheduledPatients() {
                                             </div>
                                             <div className="info-row">
                                                 <span className="info-label">Type:</span>
-                                                <span className={`test-type-badge ${patient.test_type}`}>
-                                                    {patient.test_type}
-                                                </span>
+                                                <span className="test-type-badge">{patient.test_type}</span>
                                             </div>
                                             <div className="info-row">
                                                 <span className="info-label">Status:</span>
@@ -236,8 +201,6 @@ export default function ScheduledPatients() {
                                             <Form method="post" replace>
                                                 <input type="hidden" name="testOrderId" value={patient.test_order_id} />
                                                 <input type="hidden" name="patientName" value={patient.patient_name} />
-                                                <input type="hidden" name="testName" value={patient.test_name} />
-                                                <input type="hidden" name="testType" value={patient.test_type} />
                                                 <button
                                                     type="submit"
                                                     disabled={isThisSubmitting}
@@ -255,6 +218,116 @@ export default function ScheduledPatients() {
                     </section>
                 ))
             )}
+
+            {/* Upload Modal - Shows automatically after check-in */}
+            {uploadModalCaseId && (
+                <UploadModal 
+                    caseId={uploadModalCaseId}
+                    accessionNumber={actionData?.accessionNumber}
+                    onClose={() => {
+                        setUploadModalCaseId(null)
+                        if (context?.refreshData) context.refreshData()
+                    }}
+                />
+            )}
+        </div>
+    )
+}
+
+// Upload Modal Component
+function UploadModal({ caseId, accessionNumber, onClose }) {
+    const [file, setFile] = useState(null)
+    const [uploading, setUploading] = useState(false)
+    const [error, setError] = useState(null)
+
+    const handleUpload = async (e) => {
+        e.preventDefault()
+        if (!file) {
+            setError('Please select a file')
+            return
+        }
+
+        setUploading(true)
+        setError(null)
+
+        const token = localStorage.getItem('token')
+        const formData = new FormData()
+        formData.append('case_id', caseId)
+        formData.append('dicom_file', file)
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/pathology/upload/', {
+                method: 'POST',
+                headers: { 'Authorization': `Token ${token}` },
+                body: formData
+            })
+
+            if (response.ok) {
+                alert('✓ Slide uploaded successfully!')
+                onClose()
+            } else {
+                const data = await response.json()
+                setError(data.error || 'Upload failed')
+            }
+        } catch (error) {
+            console.error(error)
+            setError('Network error. Please try again.')
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Upload DICOM Slide</h2>
+                    <button onClick={onClose} className="modal-close-btn">×</button>
+                </div>
+                <div className="modal-body">
+                    <p style={{marginBottom: '16px', color: '#6b7280'}}>
+                        Upload slide for: <strong>{accessionNumber}</strong>
+                    </p>
+                    
+                    {error && (
+                        <div className="alert alert-error" style={{marginBottom: '16px'}}>
+                            {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleUpload}>
+                        <div style={{marginBottom: '20px'}}>
+                            <label style={{display: 'block', marginBottom: '8px', fontWeight: '500'}}>
+                                DICOM File (.dcm)
+                            </label>
+                            <input
+                                type="file"
+                                accept=".dcm,.dicom"
+                                onChange={(e) => setFile(e.target.files[0])}
+                                required
+                                style={{width: '100%'}}
+                            />
+                        </div>
+                        <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                disabled={uploading}
+                                className="btn-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={uploading}
+                                className="btn-primary"
+                            >
+                                {uploading ? 'Uploading...' : 'Upload Slide'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     )
 }

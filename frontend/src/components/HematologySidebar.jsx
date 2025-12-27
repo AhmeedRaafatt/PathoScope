@@ -23,6 +23,11 @@ export default function HematologySidebar() {
             icon: faCalendarCheck
         },
         {
+            name: 'Upload Slides',
+            to: '/hematology/upload',
+            icon: faCalendarCheck
+        },
+        {
             name: 'Samples Dashboard',
             to: '/hematology/samples',
             icon: faTachometerAlt
