@@ -40,7 +40,7 @@ export default function RevenueChart() {
                 backgroundColor: "rgba(91, 101, 220, 0.8)",
                 borderColor: "rgba(91, 101, 220, 1)",
                 borderWidth: 2,
-                borderRadius: 8,
+                borderRadius: 6,
                 hoverBackgroundColor: "rgba(76, 85, 194, 0.9)",
               },
             ],
@@ -90,7 +90,7 @@ export default function RevenueChart() {
             data={chartData}
             options={{
               responsive: true,
-              maintainAspectRatio: true,
+              maintainAspectRatio: false,
               indexAxis: undefined,
               plugins: {
                 legend: {
@@ -99,10 +99,10 @@ export default function RevenueChart() {
                   labels: {
                     color: "#6b7280",
                     font: {
-                      size: 13,
+                      size: 12,
                       weight: "500",
                     },
-                    padding: 15,
+                    padding: 12,
                   },
                 },
                 title: {
@@ -113,10 +113,10 @@ export default function RevenueChart() {
                   backgroundColor: "rgba(0, 0, 0, 0.8)",
                   titleColor: "#fff",
                   bodyColor: "#fff",
-                  padding: 12,
-                  borderRadius: 8,
-                  titleFont: { size: 14, weight: "bold" },
-                  bodyFont: { size: 13 },
+                  padding: 10,
+                  borderRadius: 6,
+                  titleFont: { size: 13, weight: "bold" },
+                  bodyFont: { size: 12 },
                   callbacks: {
                     label: function (context) {
                       return `Revenue: $${context.parsed.y.toFixed(2)}`;
@@ -129,7 +129,7 @@ export default function RevenueChart() {
                   beginAtZero: true,
                   ticks: {
                     color: "#6b7280",
-                    font: { size: 12 },
+                    font: { size: 11 },
                     callback: function (value) {
                       return "$" + value.toFixed(0);
                     },
@@ -142,7 +142,7 @@ export default function RevenueChart() {
                 x: {
                   ticks: {
                     color: "#6b7280",
-                    font: { size: 12 },
+                    font: { size: 11 },
                   },
                   grid: {
                     display: false,

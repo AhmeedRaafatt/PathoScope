@@ -239,12 +239,6 @@ export default function AdminDashboard() {
         </h2>
         <div className="charts-grid">
           <RevenueChart />
-          <div className="chart-container">
-            <h3>Appointment Volume</h3>
-            <div className="chart-placeholder">
-              <p>Chart implementation coming soon</p>
-            </div>
-          </div>
         </div>
       </section>
     </main>

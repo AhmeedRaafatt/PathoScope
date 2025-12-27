@@ -1,96 +1,79 @@
-import { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faShieldAlt, 
-  faSearch, 
+import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faShieldAlt,
+  faSearch,
   faFilter,
   faExclamationTriangle,
   faDownload,
   faEye,
   faUser,
-  faCalendar,
   faCog,
   faTrash,
   faEdit,
-  faSignInAlt
-} from '@fortawesome/free-solid-svg-icons';
-import '../../styles/admin/AuditLogs.css';
+  faSignInAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import "../../styles/admin/AuditLogs.css";
 
 export default function AuditLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [actionFilter, setActionFilter] = useState('all');
-  const [modelFilter, setModelFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [actionFilter, setActionFilter] = useState("all");
   const [selectedLog, setSelectedLog] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [pagination, setPagination] = useState({ current: 1, total: 1, pageSize: 50 });
+  const [pagination, setPagination] = useState({
+    current: 1,
+    total: 1,
+    pageSize: 50,
+  });
 
   const ACTION_TYPES = [
-    { value: 'all', label: 'All Actions' },
-    { value: 'CREATE', label: 'Create' },
-    { value: 'UPDATE', label: 'Update' },
-    { value: 'DELETE', label: 'Delete' },
-    { value: 'LOGIN', label: 'Login' }
-  ];
-
-  const MODEL_TYPES = [
-    { value: 'all', label: 'All Models' },
-    { value: 'User', label: 'User' },
-    { value: 'Appointment', label: 'Appointment' },
-    { value: 'TestOrder', label: 'Test Order' },
-    { value: 'Invoice', label: 'Invoice' },
-    { value: 'Sample', label: 'Sample' },
-    { value: 'TestResult', label: 'Test Result' },
-    { value: 'TestAnalyte', label: 'Test Analyte' }
-  ];
-
-  const DATE_FILTERS = [
-    { value: 'all', label: 'All Time' },
-    { value: 'today', label: 'Today' },
-    { value: 'week', label: 'This Week' },
-    { value: 'month', label: 'This Month' },
-    { value: '3months', label: 'Last 3 Months' }
+    { value: "all", label: "All Actions" },
+    { value: "CREATE", label: "Create" },
+    { value: "UPDATE", label: "Update" },
+    { value: "DELETE", label: "Delete" },
+    { value: "LOGIN", label: "Login" },
   ];
 
   // Fetch audit logs
   useEffect(() => {
     fetchAuditLogs();
-  }, [searchTerm, actionFilter, modelFilter, dateFilter, pagination.current]);
+  }, [searchTerm, actionFilter, pagination.current]);
 
   const fetchAuditLogs = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const params = new URLSearchParams();
-      
-      if (searchTerm) params.append('search', searchTerm);
-      if (actionFilter !== 'all') params.append('action_type', actionFilter);
-      if (modelFilter !== 'all') params.append('target_model', modelFilter);
-      if (dateFilter !== 'all') params.append('date_filter', dateFilter);
-      params.append('page', pagination.current);
-      params.append('page_size', pagination.pageSize);
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/audit-logs/?${params}`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
+      if (searchTerm) params.append("search", searchTerm);
+      if (actionFilter !== "all") params.append("action_type", actionFilter);
+      params.append("page", pagination.current);
+      params.append("page_size", pagination.pageSize);
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/admin/audit-logs/?${params}`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
         setLogs(data.results || data);
         if (data.count) {
-          setPagination(prev => ({
+          setPagination((prev) => ({
             ...prev,
-            total: Math.ceil(data.count / prev.pageSize)
+            total: Math.ceil(data.count / prev.pageSize),
           }));
         }
       } else {
-        throw new Error('Failed to fetch audit logs');
+        throw new Error("Failed to fetch audit logs");
       }
     } catch (err) {
       setError(err.message);
@@ -101,34 +84,35 @@ export default function AuditLogs() {
 
   const handleExportLogs = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const params = new URLSearchParams();
-      
-      if (searchTerm) params.append('search', searchTerm);
-      if (actionFilter !== 'all') params.append('action_type', actionFilter);
-      if (modelFilter !== 'all') params.append('target_model', modelFilter);
-      if (dateFilter !== 'all') params.append('date_filter', dateFilter);
-      params.append('export', 'csv');
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/audit-logs/?${params}`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
+      if (searchTerm) params.append("search", searchTerm);
+      if (actionFilter !== "all") params.append("action_type", actionFilter);
+      params.append("export", "csv");
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/admin/audit-logs/?${params}`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `audit-logs-${new Date().toISOString().split("T")[0]}.csv`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        throw new Error('Failed to export logs');
+        throw new Error("Failed to export logs");
       }
     } catch (err) {
       alert(`Error exporting logs: ${err.message}`);
@@ -141,24 +125,24 @@ export default function AuditLogs() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getActionIcon = (actionType) => {
     switch (actionType) {
-      case 'CREATE':
+      case "CREATE":
         return faEdit;
-      case 'UPDATE':
+      case "UPDATE":
         return faCog;
-      case 'DELETE':
+      case "DELETE":
         return faTrash;
-      case 'LOGIN':
+      case "LOGIN":
         return faSignInAlt;
       default:
         return faShieldAlt;
@@ -167,22 +151,22 @@ export default function AuditLogs() {
 
   const getActionColor = (actionType) => {
     switch (actionType) {
-      case 'CREATE':
-        return 'create';
-      case 'UPDATE':
-        return 'update';
-      case 'DELETE':
-        return 'delete';
-      case 'LOGIN':
-        return 'login';
+      case "CREATE":
+        return "create";
+      case "UPDATE":
+        return "update";
+      case "DELETE":
+        return "delete";
+      case "LOGIN":
+        return "login";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   if (loading && logs.length === 0) {
     return (
-      <main className='audit-logs'>
+      <main className="audit-logs">
         <div className="page-header">
           <h1>Audit Logs</h1>
         </div>
@@ -195,17 +179,14 @@ export default function AuditLogs() {
   }
 
   return (
-    <main className='audit-logs'>
+    <main className="audit-logs">
       {/* Page Header */}
       <header className="page-header">
         <h1>
           <FontAwesomeIcon icon={faShieldAlt} className="header-icon" />
           Audit Logs
         </h1>
-        <button 
-          className="btn-export"
-          onClick={handleExportLogs}
-        >
+        <button className="btn-export" onClick={handleExportLogs}>
           <FontAwesomeIcon icon={faDownload} />
           Export Logs
         </button>
@@ -233,41 +214,13 @@ export default function AuditLogs() {
 
         <div className="filter-dropdown">
           <FontAwesomeIcon icon={faFilter} className="filter-icon" />
-          <select 
-            value={actionFilter} 
+          <select
+            value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value)}
           >
-            {ACTION_TYPES.map(action => (
+            {ACTION_TYPES.map((action) => (
               <option key={action.value} value={action.value}>
                 {action.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-dropdown">
-          <FontAwesomeIcon icon={faFilter} className="filter-icon" />
-          <select 
-            value={modelFilter} 
-            onChange={(e) => setModelFilter(e.target.value)}
-          >
-            {MODEL_TYPES.map(model => (
-              <option key={model.value} value={model.value}>
-                {model.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-dropdown">
-          <FontAwesomeIcon icon={faCalendar} className="filter-icon" />
-          <select 
-            value={dateFilter} 
-            onChange={(e) => setDateFilter(e.target.value)}
-          >
-            {DATE_FILTERS.map(date => (
-              <option key={date.value} value={date.value}>
-                {date.label}
               </option>
             ))}
           </select>
@@ -292,26 +245,35 @@ export default function AuditLogs() {
               {logs.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="empty-state">
-                    <FontAwesomeIcon icon={faShieldAlt} className="empty-icon" />
+                    <FontAwesomeIcon
+                      icon={faShieldAlt}
+                      className="empty-icon"
+                    />
                     <p>No audit logs found</p>
                   </td>
                 </tr>
               ) : (
-                logs.map(log => (
+                logs.map((log) => (
                   <tr key={log.id} className="log-row">
-                    <td className="timestamp-cell">
-                      {formatDate(log.timestamp)}
-                    </td>
+                    <td className="timestamp-cell">{formatDate(log.timestamp)}</td>
                     <td className="action-cell">
-                      <span className={`action-badge ${getActionColor(log.action_type)}`}>
-                        <FontAwesomeIcon icon={getActionIcon(log.action_type)} />
+                      <span
+                        className={`action-badge ${getActionColor(
+                          log.action_type
+                        )}`}
+                      >
+                        <FontAwesomeIcon
+                          icon={getActionIcon(log.action_type)}
+                        />
                         {log.action_type}
                       </span>
                     </td>
                     <td className="actor-cell">
                       <div className="actor-info">
                         <FontAwesomeIcon icon={faUser} className="actor-icon" />
-                        <span className="actor-name">{log.actor_name || 'System'}</span>
+                        <span className="actor-name">
+                          {log.actor_name || "System"}
+                        </span>
                       </div>
                     </td>
                     <td className="target-cell">
@@ -324,14 +286,13 @@ export default function AuditLogs() {
                     </td>
                     <td className="details-cell">
                       <div className="details-preview">
-                        {log.details.length > 50 
-                          ? `${log.details.substring(0, 50)}...` 
-                          : log.details
-                        }
+                        {log.details.length > 50
+                          ? `${log.details.substring(0, 50)}...`
+                          : log.details}
                       </div>
                     </td>
                     <td className="actions-cell">
-                      <button 
+                      <button
                         className="action-btn view"
                         onClick={() => openDetailsModal(log)}
                         title="View Details"
@@ -348,75 +309,88 @@ export default function AuditLogs() {
       </section>
 
       {/* Pagination */}
-      {pagination.total > 1 && (
-        <div className="pagination-section">
-          <div className="pagination-info">
-            <span>Page {pagination.current} of {pagination.total}</span>
+      {logs.length > 0 && (
+        <section className="pagination-section">
+          <div>
+            <span>
+              Page {pagination.current} of {pagination.total}
+            </span>
           </div>
-          <div className="pagination-controls">
-            <button 
+          <div>
+            <button
               className="pagination-btn"
+              onClick={() =>
+                setPagination((prev) => ({
+                  ...prev,
+                  current: Math.max(1, prev.current - 1),
+                }))
+              }
               disabled={pagination.current === 1}
-              onClick={() => setPagination(prev => ({ ...prev, current: prev.current - 1 }))}
             >
               Previous
             </button>
-            <button 
+            <button
               className="pagination-btn"
+              onClick={() =>
+                setPagination((prev) => ({
+                  ...prev,
+                  current: Math.min(prev.total, prev.current + 1),
+                }))
+              }
               disabled={pagination.current === pagination.total}
-              onClick={() => setPagination(prev => ({ ...prev, current: prev.current + 1 }))}
             >
               Next
             </button>
           </div>
-        </div>
+        </section>
       )}
 
       {/* Details Modal */}
       {showDetailsModal && selectedLog && (
-        <div className="modal-overlay">
-          <div className="modal details-modal">
+        <div className="modal-overlay" onClick={() => setShowDetailsModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Audit Log Details</h2>
-              <button className="modal-close" onClick={() => setShowDetailsModal(false)}>
-                ×
+              <h2>Log Details</h2>
+              <button
+                className="modal-close"
+                onClick={() => setShowDetailsModal(false)}
+              >
+                
               </button>
             </div>
             <div className="modal-body">
               <div className="detail-group">
-                <label>Timestamp:</label>
+                <label>Timestamp</label>
                 <span>{formatDate(selectedLog.timestamp)}</span>
               </div>
               <div className="detail-group">
-                <label>Action Type:</label>
-                <span className={`action-badge ${getActionColor(selectedLog.action_type)}`}>
-                  <FontAwesomeIcon icon={getActionIcon(selectedLog.action_type)} />
-                  {selectedLog.action_type}
-                </span>
+                <label>Action</label>
+                <span>{selectedLog.action_type}</span>
               </div>
               <div className="detail-group">
-                <label>Actor:</label>
-                <span>{selectedLog.actor_name || 'System'}</span>
+                <label>Actor</label>
+                <span>{selectedLog.actor_name || "System"}</span>
               </div>
               <div className="detail-group">
-                <label>Target Model:</label>
+                <label>Target Model</label>
                 <span>{selectedLog.target_model}</span>
               </div>
               {selectedLog.target_id && (
                 <div className="detail-group">
-                  <label>Target ID:</label>
-                  <span>{selectedLog.target_id}</span>
+                  <label>Target ID</label>
+                  <span>#{selectedLog.target_id}</span>
                 </div>
               )}
-              <div className="detail-group full-width">
-                <label>Details:</label>
-                <div className="details-full">
-                  {selectedLog.details}
-                </div>
+              <div className="detail-group">
+                <label>Details</label>
+                <span>{selectedLog.details}</span>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowDetailsModal(false)}>
+              <button
+                className="modal-btn close"
+                onClick={() => setShowDetailsModal(false)}
+              >
                 Close
               </button>
             </div>

@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.db.models.functions import TruncDate
 # Import models from your other apps
 from patient_portal.models import Appointment, TestOrder, Invoice
@@ -51,7 +51,7 @@ class AdminDashboardStatsView(APIView):
         total_pathologist = User.objects.filter(role="pathologist").count()
 
         # -- Appointment Stats --
-        pending_appointments = Appointment.objects.filter(status="scheduled").count()
+        pending_appointments = Appointment.objects.filter(status="pending").count()
         completed_appointments = Appointment.objects.filter(status="completed").count()
 
         # -- Lab/Hematology Stats --
@@ -131,10 +131,22 @@ class UserListView(generics.ListCreateAPIView):
     serializer_class = UserManagementSerializer
 
     def get_queryset(self):
+        queryset = User.objects.all()
+        
+        # Filter by role
         role = self.request.query_params.get("role")
         if role:
-            return User.objects.filter(role=role)
-        return User.objects.all()
+            queryset = queryset.filter(role=role)
+        
+        # Search by username or email
+        search = self.request.query_params.get("search", "").strip()
+        if search:
+            queryset = queryset.filter(
+                Q(username__icontains=search) |
+                Q(email__icontains=search)
+            )
+        
+        return queryset
 
     def perform_create(self, serializer):
         # 1. Save the new user first so we get an ID
@@ -204,10 +216,30 @@ class TestAnalyteDetailView(generics.RetrieveUpdateDestroyAPIView):
 class AuditLogListView(generics.ListAPIView):
     """
     Admin can view the history of all actions.
+    Supports filtering by action_type and search by username or details.
     """
     permission_classes = [IsAdminRole]
     queryset = AdminActionLog.objects.all().order_by("-timestamp")
     serializer_class = AdminActionLogSerializer
+    pagination_class = None  # Disable pagination for now
+
+    def get_queryset(self):
+        queryset = AdminActionLog.objects.all().order_by("-timestamp")
+        
+        # Filter by action type
+        action_type = self.request.query_params.get('action_type', 'all')
+        if action_type and action_type != 'all':
+            queryset = queryset.filter(action_type=action_type)
+        
+        # Search by username or details
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(
+                Q(actor__username__icontains=search) |
+                Q(details__icontains=search)
+            )
+        
+        return queryset
 
 
 # 5. BROADCAST MANAGER (New)

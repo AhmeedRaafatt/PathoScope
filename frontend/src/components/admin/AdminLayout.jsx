@@ -15,13 +15,41 @@ import "../../styles/admin/AdminLayout.css";
 
 export default function AdminLayout() {
   const [activeBroadcast, setActiveBroadcast] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Authentication Check
+  // Authentication and Role Check
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) navigate("/login");
+    const userRole = localStorage.getItem("userRole");
+    
+    // Check if token exists and user role is admin
+    if (!token || userRole !== "admin") {
+      // Redirect to login if not authenticated or not admin
+      localStorage.clear();
+      navigate("/login", { replace: true });
+      setIsAuthorized(false);
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [navigate]);
+
+  // Listen for storage changes (when another tab logs in with different role)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === "userRole") {
+        const newRole = e.newValue;
+        if (newRole !== "admin") {
+          // User logged in as different role in another tab
+          navigate("/login", { replace: true });
+          setIsAuthorized(false);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [navigate]);
 
   const navItems = [
@@ -31,6 +59,10 @@ export default function AdminLayout() {
     { path: "/admin/audit", icon: faShieldAlt, label: "Audit Logs" },
     { path: "/admin/broadcasts", icon: faBullhorn, label: "Broadcasts" },
   ];
+
+  if (!isAuthorized) {
+    return null; // Don't render while checking auth
+  }
 
   return (
     <div className="admin-layout">
@@ -60,7 +92,7 @@ export default function AdminLayout() {
             className="logout-btn"
             onClick={() => {
               localStorage.clear();
-              navigate("/login");
+              navigate("/login", { replace: true });
             }}
           >
             <FontAwesomeIcon icon={faSignOutAlt} fixedWidth />
@@ -83,13 +115,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main style={{ flex: 1, padding: "24px 32px", background: "#FAFAFD", overflowY: "auto" }}>
-          {activeBroadcast && (
-            <div className="broadcast-banner">
-              <span>{activeBroadcast.message}</span>
-              <button onClick={() => setActiveBroadcast(null)}>Dismiss</button>
-            </div>
-          )}
+        <main className="admin-main">
           <Outlet />
         </main>
       </div>
