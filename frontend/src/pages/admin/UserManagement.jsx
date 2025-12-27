@@ -1,41 +1,41 @@
-import { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUsers, 
-  faPlus, 
-  faEdit, 
-  faTrash, 
-  faSearch, 
+import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUsers,
+  faPlus,
+  faEdit,
+  faTrash,
+  faSearch,
   faFilter,
   faExclamationTriangle,
   faCheck,
   faTimes,
   faUserShield,
   faUserMd,
-  faVial
-} from '@fortawesome/free-solid-svg-icons';
-import '../../styles/admin/UserManagement.css';
+  faVial,
+} from "@fortawesome/free-solid-svg-icons";
+import "../../styles/admin/UserManagement.css";
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [pagination, setPagination] = useState({ current: 1, total: 1 });
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const USER_ROLES = [
-    { value: 'patient', label: 'Patient', icon: faUsers },
-    { value: 'lab_tech', label: 'Lab Technician', icon: faVial },
-    { value: 'pathologist', label: 'Pathologist', icon: faUserMd },
-    { value: 'admin', label: 'Administrator', icon: faUserShield }
+    { value: "patient", label: "Patient", icon: faUsers },
+    { value: "lab_tech", label: "Lab Technician", icon: faVial },
+    { value: "pathologist", label: "Pathologist", icon: faUserMd },
+    { value: "admin", label: "Administrator", icon: faUserShield },
   ];
 
-  // Fetch users
   useEffect(() => {
     fetchUsers();
   }, [searchTerm, roleFilter]);
@@ -43,24 +43,27 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const params = new URLSearchParams();
-      
-      if (searchTerm) params.append('search', searchTerm);
-      if (roleFilter !== 'all') params.append('role', roleFilter);
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/users/?${params}`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
+      if (searchTerm) params.append("search", searchTerm);
+      if (roleFilter !== "all") params.append("role", roleFilter);
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/admin/users/?${params}`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
       } else {
-        throw new Error('Failed to fetch users');
+        throw new Error("Failed to fetch users");
       }
     } catch (err) {
       setError(err.message);
@@ -69,52 +72,79 @@ export default function UserManagement() {
     }
   };
 
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setShowSuccessModal(true);
+    setTimeout(() => {
+      setShowSuccessModal(false);
+    }, 3000);
+  };
+
   const handleCreateUser = async (userData) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://127.0.0.1:8000/api/admin/users/', {
-        method: 'POST',
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://127.0.0.1:8000/api/admin/users/", {
+        method: "POST",
         headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(userData)
+        body: JSON.stringify(userData),
       });
 
       if (response.ok) {
         await fetchUsers();
         setShowCreateModal(false);
-        alert('User created successfully');
+        showSuccess("User created successfully!");
       } else {
-        throw new Error('Failed to create user');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to create user");
       }
     } catch (err) {
-      alert(`Error creating user: ${err.message}`);
+      showSuccess(`Error: ${err.message}`);
     }
   };
 
   const handleUpdateUser = async (userData) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/users/${selectedUser.id}/`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData)
-      });
+      const token = localStorage.getItem("token");
+      
+      // For edit: only send password if it's not empty
+      const updateData = {
+        username: userData.username,
+        email: userData.email,
+        role: userData.role,
+        is_active: userData.is_active,
+      };
+      
+      // Only add password if it's provided (not empty)
+      if (userData.password && userData.password.trim() !== "") {
+        updateData.password = userData.password;
+      }
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/admin/users/${selectedUser.id}/`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updateData),
+        }
+      );
 
       if (response.ok) {
         await fetchUsers();
         setShowEditModal(false);
         setSelectedUser(null);
-        alert('User updated successfully');
+        showSuccess("User updated successfully!");
       } else {
-        throw new Error('Failed to update user');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to update user");
       }
     } catch (err) {
-      alert(`Error updating user: ${err.message}`);
+      showSuccess(`Error: ${err.message}`);
     }
   };
 
@@ -122,25 +152,28 @@ export default function UserManagement() {
     if (!selectedUser) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/users/${selectedUser.id}/`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/admin/users/${selectedUser.id}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         await fetchUsers();
         setShowDeleteModal(false);
         setSelectedUser(null);
-        alert('User deleted successfully');
+        showSuccess("User deleted successfully!");
       } else {
-        throw new Error('Failed to delete user');
+        throw new Error("Failed to delete user");
       }
     } catch (err) {
-      alert(`Error deleting user: ${err.message}`);
+      showSuccess(`Error: ${err.message}`);
     }
   };
 
@@ -155,20 +188,20 @@ export default function UserManagement() {
   };
 
   const getRoleInfo = (role) => {
-    return USER_ROLES.find(r => r.value === role) || USER_ROLES[0];
+    return USER_ROLES.find((r) => r.value === role) || USER_ROLES[0];
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   if (loading && users.length === 0) {
     return (
-      <main className='user-management'>
+      <main className="user-management">
         <div className="page-header">
           <h1>User Management</h1>
         </div>
@@ -181,14 +214,13 @@ export default function UserManagement() {
   }
 
   return (
-    <main className='user-management'>
-      {/* Page Header */}
+    <main className="user-management">
       <header className="page-header">
         <h1>
           <FontAwesomeIcon icon={faUsers} className="header-icon" />
           User Management
         </h1>
-        <button 
+        <button
           className="btn-primary"
           onClick={() => setShowCreateModal(true)}
         >
@@ -197,7 +229,6 @@ export default function UserManagement() {
         </button>
       </header>
 
-      {/* Error Message */}
       {error && (
         <div className="error-message">
           <FontAwesomeIcon icon={faExclamationTriangle} />
@@ -205,7 +236,6 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* Filters */}
       <section className="filters-section">
         <div className="search-bar">
           <FontAwesomeIcon icon={faSearch} className="search-icon" />
@@ -219,12 +249,12 @@ export default function UserManagement() {
 
         <div className="filter-dropdown">
           <FontAwesomeIcon icon={faFilter} className="filter-icon" />
-          <select 
-            value={roleFilter} 
+          <select
+            value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
           >
             <option value="all">All Roles</option>
-            {USER_ROLES.map(role => (
+            {USER_ROLES.map((role) => (
               <option key={role.value} value={role.value}>
                 {role.label}
               </option>
@@ -233,7 +263,6 @@ export default function UserManagement() {
         </div>
       </section>
 
-      {/* Users Table */}
       <section className="users-table-section">
         <div className="table-container">
           <table className="users-table">
@@ -256,7 +285,7 @@ export default function UserManagement() {
                   </td>
                 </tr>
               ) : (
-                users.map(user => {
+                users.map((user) => {
                   const roleInfo = getRoleInfo(user.role);
                   return (
                     <tr key={user.id} className="user-row">
@@ -278,22 +307,28 @@ export default function UserManagement() {
                         </span>
                       </td>
                       <td className="status-cell">
-                        <span className={`status-badge ${user.is_active ? 'active' : 'inactive'}`}>
-                          <FontAwesomeIcon icon={user.is_active ? faCheck : faTimes} />
-                          {user.is_active ? 'Active' : 'Inactive'}
+                        <span
+                          className={`status-badge ${
+                            user.is_active ? "active" : "inactive"
+                          }`}
+                        >
+                          <FontAwesomeIcon
+                            icon={user.is_active ? faCheck : faTimes}
+                          />
+                          {user.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td className="date-cell">{formatDate(user.date_joined)}</td>
                       <td className="actions-cell">
                         <div className="action-buttons">
-                          <button 
+                          <button
                             className="action-btn edit"
                             onClick={() => openEditModal(user)}
                             title="Edit User"
                           >
                             <FontAwesomeIcon icon={faEdit} />
                           </button>
-                          <button 
+                          <button
                             className="action-btn delete"
                             onClick={() => openDeleteModal(user)}
                             title="Delete User"
@@ -311,7 +346,6 @@ export default function UserManagement() {
         </div>
       </section>
 
-      {/* Create User Modal */}
       {showCreateModal && (
         <UserModal
           title="Create New User"
@@ -321,7 +355,6 @@ export default function UserManagement() {
         />
       )}
 
-      {/* Edit User Modal */}
       {showEditModal && selectedUser && (
         <UserModal
           title="Edit User"
@@ -335,13 +368,15 @@ export default function UserManagement() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedUser && (
         <div className="modal-overlay">
           <div className="modal delete-modal">
             <div className="modal-header">
               <h2>Confirm Delete</h2>
-              <button className="modal-close" onClick={() => setShowDeleteModal(false)}>
+              <button
+                className="modal-close"
+                onClick={() => setShowDeleteModal(false)}
+              >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </div>
@@ -349,11 +384,20 @@ export default function UserManagement() {
               <div className="warning-icon">
                 <FontAwesomeIcon icon={faExclamationTriangle} />
               </div>
-              <p>Are you sure you want to delete user <strong>{selectedUser.username}</strong>?</p>
-              <p className="warning-text">This action cannot be undone and will permanently remove the user and all associated data.</p>
+              <p>
+                Are you sure you want to delete user{" "}
+                <strong>{selectedUser.username}</strong>?
+              </p>
+              <p className="warning-text">
+                This action cannot be undone and will permanently remove the
+                user and all associated data.
+              </p>
             </div>
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
+              <button
+                className="btn-secondary"
+                onClick={() => setShowDeleteModal(false)}
+              >
                 Cancel
               </button>
               <button className="btn-danger" onClick={handleDeleteUser}>
@@ -364,30 +408,35 @@ export default function UserManagement() {
           </div>
         </div>
       )}
+
+      {showSuccessModal && (
+        <SuccessModal
+          message={successMessage}
+          onClose={() => setShowSuccessModal(false)}
+        />
+      )}
     </main>
   );
 }
 
-// User Modal Component
 function UserModal({ title, user, onSubmit, onClose, roles }) {
   const [formData, setFormData] = useState({
-    username: user?.username || '',
-    email: user?.email || '',
-    role: user?.role || 'patient',
-    password: '',
-    is_active: user?.is_active ?? true
+    username: user?.username || "",
+    email: user?.email || "",
+    role: user?.role || "patient",
+    password: "",
+    is_active: user?.is_active ?? true,
   });
 
   const [errors, setErrors] = useState({});
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Basic validation
+
     const newErrors = {};
-    if (!formData.username) newErrors.username = 'Username is required';
-    if (!formData.email) newErrors.email = 'Email is required';
-    if (!user && !formData.password) newErrors.password = 'Password is required';
+    if (!formData.username) newErrors.username = "Username is required";
+    if (!formData.email) newErrors.email = "Email is required";
+    if (!user && !formData.password) newErrors.password = "Password is required";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -399,16 +448,15 @@ function UserModal({ title, user, onSubmit, onClose, roles }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-    
-    // Clear error when user starts typing
+
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
@@ -422,7 +470,7 @@ function UserModal({ title, user, onSubmit, onClose, roles }) {
             <FontAwesomeIcon icon={faTimes} />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="modal-body">
           <div className="form-group">
             <label htmlFor="username">Username *</label>
@@ -432,9 +480,11 @@ function UserModal({ title, user, onSubmit, onClose, roles }) {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className={errors.username ? 'error' : ''}
+              className={errors.username ? "error" : ""}
             />
-            {errors.username && <span className="error-text">{errors.username}</span>}
+            {errors.username && (
+              <span className="error-text">{errors.username}</span>
+            )}
           </div>
 
           <div className="form-group">
@@ -445,7 +495,7 @@ function UserModal({ title, user, onSubmit, onClose, roles }) {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={errors.email ? 'error' : ''}
+              className={errors.email ? "error" : ""}
             />
             {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
@@ -458,7 +508,7 @@ function UserModal({ title, user, onSubmit, onClose, roles }) {
               value={formData.role}
               onChange={handleChange}
             >
-              {roles.map(role => (
+              {roles.map((role) => (
                 <option key={role.value} value={role.value}>
                   {role.label}
                 </option>
@@ -475,9 +525,25 @@ function UserModal({ title, user, onSubmit, onClose, roles }) {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={errors.password ? 'error' : ''}
+                className={errors.password ? "error" : ""}
               />
-              {errors.password && <span className="error-text">{errors.password}</span>}
+              {errors.password && (
+                <span className="error-text">{errors.password}</span>
+              )}
+            </div>
+          )}
+
+          {user && (
+            <div className="form-group">
+              <label htmlFor="password">Password (leave empty to keep current)</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Leave empty to keep current password"
+                value={formData.password}
+                onChange={handleChange}
+              />
             </div>
           )}
 
@@ -498,10 +564,36 @@ function UserModal({ title, user, onSubmit, onClose, roles }) {
               Cancel
             </button>
             <button type="submit" className="btn-primary">
-              {user ? 'Update User' : 'Create User'}
+              {user ? "Update User" : "Create User"}
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function SuccessModal({ message, onClose }) {
+  return (
+    <div className="modal-overlay">
+      <div className="modal success-modal">
+        <div className="modal-header">
+          <h2>Success</h2>
+          <button className="modal-close" onClick={onClose}>
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+        </div>
+        <div className="modal-body">
+          <div className="success-icon">
+            <FontAwesomeIcon icon={faCheck} />
+          </div>
+          <p className="success-message">{message}</p>
+        </div>
+        <div className="modal-footer">
+          <button className="btn-primary" onClick={onClose}>
+            OK
+          </button>
+        </div>
       </div>
     </div>
   );

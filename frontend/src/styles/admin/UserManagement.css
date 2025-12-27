@@ -469,6 +469,321 @@
   font-size: 0.9375rem;
 }
 
+/* ===== MODAL OVERLAY ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ===== MODAL - SIGNUP STYLE ===== */
+.modal {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 
+              0 8px 16px rgba(0, 0, 0, 0.04),
+              0 12px 24px rgba(91, 101, 220, 0.08);
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Top Colored Border */
+.modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #5B65DC 0%, #868ff5 100%);
+}
+
+.modal {
+  position: relative;
+}
+
+/* Modal Header */
+.modal-header {
+  padding: 24px 30px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #f8f9ff 0%, #eeeffd 100%);
+}
+
+.modal-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: rgba(91, 101, 220, 0.1);
+  color: #5B65DC;
+}
+
+/* Modal Body - Form */
+.modal-body {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.form-group input,
+.form-group select {
+  padding: 14px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  color: #2d3748;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #5B65DC;
+  box-shadow: 0 0 0 3px rgba(91, 101, 220, 0.1);
+  background-color: #ffffff;
+}
+
+.form-group input:hover,
+.form-group select:hover {
+  border-color: #d1d5db;
+}
+
+.form-group input::placeholder {
+  color: #94a3b8;
+}
+
+.form-group input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-group input.error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Error Text */
+.error-text {
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Checkbox Group */
+.checkbox-group {
+  gap: 0.75rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #2d3748;
+  padding: 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-label:hover {
+  background: rgba(91, 101, 220, 0.05);
+}
+
+.checkbox-label input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  accent-color: #5B65DC;
+  transition: all 0.2s ease;
+}
+
+.checkbox-label input:hover {
+  border-color: #5B65DC;
+}
+
+.checkbox-label input:checked {
+  background: #5B65DC;
+  border-color: #5B65DC;
+}
+
+.checkbox-text {
+  font-size: 0.95rem;
+}
+
+/* Modal Footer */
+.modal-footer {
+  padding: 24px 40px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: linear-gradient(135deg, #f8f9ff 0%, #eeeffd 100%);
+  border-top: 1px solid #e5e7eb;
+}
+
+.modal-footer button {
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #5B65DC 0%, #868ff5 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(91, 101, 220, 0.25);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #4954c7 0%, #7078e8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(91, 101, 220, 0.35);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(91, 101, 220, 0.25);
+}
+
+.btn-secondary {
+  background: white;
+  color: #5B65DC;
+  border: 2px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+  border-color: #5B65DC;
+  background: #eeeffd;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+}
+
+/* Delete Modal Specific */
+.delete-modal {
+  max-width: 400px;
+}
+
+.warning-icon {
+  width: 64px;
+  height: 64px;
+  background: #fef2f2;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+  font-size: 28px;
+  margin: 0 auto 16px;
+}
+
+.modal-body {
+  text-align: center;
+}
+
+.delete-modal .modal-body p {
+  margin: 0;
+  color: #2d3748;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.delete-modal .modal-body p strong {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.warning-text {
+  color: #6b7280;
+  font-size: 0.85rem !important;
+  margin-top: 12px !important;
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -493,5 +808,27 @@
   
   .users-table {
     min-width: 800px;
+  }
+
+  .modal {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+
+  .modal-body {
+    padding: 30px 24px;
+  }
+
+  .modal-footer {
+    padding: 20px 24px;
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+
+  .modal-header h2 {
+    font-size: 20px;
   }
 }

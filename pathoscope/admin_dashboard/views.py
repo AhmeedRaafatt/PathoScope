@@ -2,13 +2,14 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q, Sum
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models.functions import TruncDate
 # Import models from your other apps
 from patient_portal.models import Appointment, TestOrder, Invoice
-
-
 
 from hematology.models import Sample, TestAnalyte
 
@@ -27,64 +28,110 @@ from hematology.serializers import TestAnalyteSerializer
 User = get_user_model()
 
 
+# CUSTOM PERMISSION: Check if user has role="admin"
+class IsAdminRole(permissions.BasePermission):
+    """
+    Custom permission to check if user has role="admin"
+    """
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and request.user.role == "admin"
+
+
 # 1. THE MAIN DASHBOARD (STATISTICS)
 class AdminDashboardStatsView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminRole]
 
     def get(self, request):
         # -- User Stats --
-        total_patients = User.objects.filter(role='patient').count()
+        total_patients = User.objects.filter(role="patient").count()
         # Corrected: Use list for role__in
-        total_staff = User.objects.filter(role__in=['lab_tech', 'pathologist']).count()
-        total_lab_tech = User.objects.filter(role='lab_tech').count()
-        # Corrected: Use role= for single value, or role__in=['pathologist']
-        total_pathologist = User.objects.filter(role='pathologist').count()
+        total_staff = User.objects.filter(role__in=["lab_tech", "pathologist"]).count()
+        total_lab_tech = User.objects.filter(role="lab_tech").count()
+        # Corrected: Use role= for single value, or role__in=["pathologist"]
+        total_pathologist = User.objects.filter(role="pathologist").count()
 
         # -- Appointment Stats --
-        pending_appointments = Appointment.objects.filter(status='scheduled').count()
-        completed_appointments = Appointment.objects.filter(status='completed').count()
+        pending_appointments = Appointment.objects.filter(status="scheduled").count()
+        completed_appointments = Appointment.objects.filter(status="completed").count()
 
         # -- Lab/Hematology Stats --
         lab_stats = Sample.objects.aggregate(
-            received=Count('id', filter=Q(status='received')),
-            in_analysis=Count('id', filter=Q(status__in=['in_analysis', 'awaiting_validation'])),
-            completed=Count('id', filter=Q(status='report_ready'))
+            received=Count("id", filter=Q(status="received")),
+            in_analysis=Count("id", filter=Q(status__in=["in_analysis", "awaiting_validation"])),
+            completed=Count("id", filter=Q(status="report_ready"))
         )
 
         # -- Invoice / Finance Stats (NEW) --
-        # 1. Calculate Total Revenue (Sum of 'amount' for all 'paid' invoices)
-        revenue_data = Invoice.objects.filter(payment_status__iexact='paid').aggregate(total_revenue=Sum('amount'))
-        total_revenue = revenue_data['total_revenue'] or 0.00  # Handle None if no invoices exist
+        # 1. Calculate Total Revenue (Sum of "amount" for all "paid" invoices)
+        revenue_data = Invoice.objects.filter(payment_status__iexact="paid").aggregate(total_revenue=Sum("amount"))
+        total_revenue = revenue_data["total_revenue"] or 0.00  # Handle None if no invoices exist
 
         # 2. Count Pending Invoices
-        pending_invoices = Invoice.objects.filter(payment_status__iexact='unpaid').count()
+        pending_invoices = Invoice.objects.filter(payment_status__iexact="unpaid").count()
 
         data = {
-            'total_patients': total_patients,
-            'total_staff': total_staff,
-            'total_lab_tech': total_lab_tech,
-            'total_pathologist': total_pathologist,
-            'pending_appointments': pending_appointments,
-            'completed_appointments': completed_appointments,
-            'samples_received': lab_stats['received'],
-            'samples_in_analysis': lab_stats['in_analysis'],
-            'reports_completed': lab_stats['completed'],
+            "total_patients": total_patients,
+            "total_staff": total_staff,
+            "total_lab_tech": total_lab_tech,
+            "total_pathologist": total_pathologist,
+            "pending_appointments": pending_appointments,
+            "completed_appointments": completed_appointments,
+            "samples_received": lab_stats["received"],
+            "samples_in_analysis": lab_stats["in_analysis"],
+            "reports_completed": lab_stats["completed"],
 
             # New Fields
-            'total_revenue': total_revenue,
-            'pending_invoices': pending_invoices,
+            "total_revenue": total_revenue,
+            "pending_invoices": pending_invoices,
         }
         return Response(data)
 
 
+# REVENUE TREND VIEW - Last 5 Days (from paid_date field)
+class RevenueTrendView(APIView):
+    permission_classes = [IsAdminRole]
+
+    def get(self, request):
+        """
+        Get revenue data for the last 5 days (including today) from Invoice.paid_date
+        Groups multiple paid invoices on the same day and sums their amounts
+        """
+        today = timezone.now().date()
+        revenue_data = []
+
+        # Loop through last 5 days (today - 4 days back)
+        for i in range(4, -1, -1):
+            day = today - timedelta(days=i)
+            day_start = timezone.make_aware(timezone.datetime.combine(day, timezone.datetime.min.time()))
+            day_end = timezone.make_aware(timezone.datetime.combine(day, timezone.datetime.max.time()))
+
+            # Get revenue for this specific day from paid_date field
+            # Only include invoices with payment_status = "paid"
+            daily_revenue = Invoice.objects.filter(
+                payment_status__iexact="paid",
+                paid_date__gte=day_start,
+                paid_date__lte=day_end
+            ).aggregate(total=Sum("amount"))
+
+            revenue_amount = daily_revenue["total"] or 0.0
+
+            revenue_data.append({
+                "date": day.strftime("%a, %b %d"),
+                "day": day.strftime("%Y-%m-%d"),
+                "revenue": float(revenue_amount)
+            })
+
+        return Response(revenue_data)
+
+
 # 2. USER MANAGEMENT (CRUD)
 class UserListView(generics.ListCreateAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminRole]
     queryset = User.objects.all()
     serializer_class = UserManagementSerializer
 
     def get_queryset(self):
-        role = self.request.query_params.get('role')
+        role = self.request.query_params.get("role")
         if role:
             return User.objects.filter(role=role)
         return User.objects.all()
@@ -96,25 +143,42 @@ class UserListView(generics.ListCreateAPIView):
         # 2. Create the Log Entry
         AdminActionLog.objects.create(
             actor=self.request.user,
-            action_type='CREATE',
-            target_model='User',
+            action_type="CREATE",
+            target_model="User",
             target_id=str(user_instance.id),
             details=f"Created new user: {user_instance.username} (Role: {user_instance.role})"
         )
 
 
-class UserDetailView(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAdminUser]
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, Update, or Delete a specific user.
+    Supports PUT requests for updating user information including passwords.
+    """
+    permission_classes = [IsAdminRole]
     queryset = User.objects.all()
     serializer_class = UserManagementSerializer
+
+    def perform_update(self, serializer):
+        # Save the updated user
+        user_instance = serializer.save()
+
+        # Log the update action
+        AdminActionLog.objects.create(
+            actor=self.request.user,
+            action_type="UPDATE",
+            target_model="User",
+            target_id=str(user_instance.id),
+            details=f"Updated user: {user_instance.username} (Email: {user_instance.email}, Role: {user_instance.role})"
+        )
 
     def perform_destroy(self, instance):
         # --- ENHANCEMENT 1: AUDIT TRAIL ---
         # Log the deletion before it happens
         AdminActionLog.objects.create(
             actor=self.request.user,
-            action_type='DELETE',
-            target_model='User',
+            action_type="DELETE",
+            target_model="User",
             target_id=str(instance.id),
             details=f"Deleted user: {instance.username} (Email: {instance.email}, Role: {instance.role})"
         )
@@ -125,13 +189,13 @@ class UserDetailView(generics.RetrieveDestroyAPIView):
 
 # 3. LAB CONFIGURATION (Manage Test Ranges)
 class TestAnalyteManagerView(generics.ListCreateAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminRole]
     queryset = TestAnalyte.objects.all()
     serializer_class = TestAnalyteSerializer
 
 
 class TestAnalyteDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminRole]
     queryset = TestAnalyte.objects.all()
     serializer_class = TestAnalyteSerializer
 
@@ -141,8 +205,8 @@ class AuditLogListView(generics.ListAPIView):
     """
     Admin can view the history of all actions.
     """
-    permission_classes = [IsAdminUser]
-    queryset = AdminActionLog.objects.all().order_by('-timestamp')
+    permission_classes = [IsAdminRole]
+    queryset = AdminActionLog.objects.all().order_by("-timestamp")
     serializer_class = AdminActionLogSerializer
 
 
@@ -151,12 +215,35 @@ class BroadcastManagerView(generics.ListCreateAPIView):
     """
     Admin: Create a new announcement or view all past ones.
     """
-    permission_classes = [IsAdminUser]
-    queryset = SystemBroadcast.objects.all().order_by('-created_at')
+    permission_classes = [IsAdminRole]
+    queryset = SystemBroadcast.objects.all().order_by("-created_at")
     serializer_class = SystemBroadcastSerializer
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+
+class BroadcastDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Admin: Edit or Delete a specific broadcast.
+    """
+    permission_classes = [IsAdminRole]
+    queryset = SystemBroadcast.objects.all()
+    serializer_class = SystemBroadcastSerializer
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        # Log the deletion
+        AdminActionLog.objects.create(
+            actor=self.request.user,
+            action_type="DELETE",
+            target_model="SystemBroadcast",
+            target_id=str(instance.id),
+            details=f"Deleted broadcast: '\''{instance.message}'\''"
+        )
+        instance.delete()
 
 
 class ActiveBroadcastView(generics.RetrieveAPIView):
@@ -170,4 +257,4 @@ class ActiveBroadcastView(generics.RetrieveAPIView):
 
     def get_object(self):
         # Return the most recent active broadcast
-        return SystemBroadcast.objects.filter(is_active=True).order_by('-created_at').first()
+        return SystemBroadcast.objects.filter(is_active=True).order_by("-created_at").first()

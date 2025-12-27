@@ -5,9 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7c2c8c1c-97f4-4aa4-ab64-4d1cb300d84e" name="Changes" comment="admin backend is added">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pathoscope/admin_dashboard/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/pathoscope/admin_dashboard/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pathoscope/admin_dashboard/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/pathoscope/admin_dashboard/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pathoscope/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/pathoscope/db.sqlite3" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -67,6 +64,7 @@
       <workItem from="1765575713398" duration="6133000" />
       <workItem from="1765654104333" duration="2920000" />
       <workItem from="1765739531348" duration="1592000" />
+      <workItem from="1766687433767" duration="211000" />
     </task>
     <task id="LOCAL-00001" summary="admin backend is added">
       <option name="closed" value="true" />

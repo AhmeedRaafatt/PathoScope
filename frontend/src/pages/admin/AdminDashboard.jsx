@@ -1,20 +1,21 @@
-import { useState, useEffect } from 'react';
-import { Link, useLoaderData } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUsers, 
-  faUserMd, 
-  faCalendarCheck, 
-  faFileAlt, 
-  faDollarSign, 
+import { useState, useEffect } from "react";
+import { Link, useLoaderData } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUsers,
+  faUserMd,
+  faCalendarCheck,
+  faFileAlt,
+  faDollarSign,
   faExclamationTriangle,
   faChartLine,
   faCog,
   faBullhorn,
   faShieldAlt,
-  faDatabase
-} from '@fortawesome/free-solid-svg-icons';
-import '../../styles/admin/Dashboard.css';
+  faDatabase,
+} from "@fortawesome/free-solid-svg-icons";
+import RevenueChart from "../../components/admin/RevenueChart";
+import "../../styles/admin/Dashboard.css";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -26,19 +27,19 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://127.0.0.1:8000/api/admin/stats/', {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://127.0.0.1:8000/api/admin/stats/", {
           headers: {
-            'Authorization': `Token ${token}`,
-            'Content-Type': 'application/json',
-          }
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
         });
 
         if (response.ok) {
           const data = await response.json();
           setStats(data);
         } else {
-          throw new Error('Failed to fetch stats');
+          throw new Error("Failed to fetch stats");
         }
       } catch (err) {
         setError(err.message);
@@ -58,24 +59,39 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchActiveBroadcast = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://127.0.0.1:8000/api/admin/broadcasts/active/', {
-          headers: {
-            'Authorization': `Token ${token}`,
-            'Content-Type': 'application/json',
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/admin/broadcasts/active/",
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
+        );
 
         if (response.ok) {
           const data = await response.json();
-          setActiveBroadcast(data);
+          // Only set if data exists and has a message
+          if (data && data.message) {
+            setActiveBroadcast(data);
+          } else {
+            setActiveBroadcast(null);
+          }
+        } else {
+          setActiveBroadcast(null);
         }
       } catch (err) {
-        console.error('Failed to fetch active broadcast:', err);
+        console.error("Failed to fetch active broadcast:", err);
+        setActiveBroadcast(null);
       }
     };
 
     fetchActiveBroadcast();
+
+    // Auto-refresh broadcast every 15 seconds
+    const broadcastInterval = setInterval(fetchActiveBroadcast, 15000);
+    return () => clearInterval(broadcastInterval);
   }, []);
 
   const dismissBroadcast = () => {
@@ -84,7 +100,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <main className='admin-dashboard'>
+      <main className="admin-dashboard">
         <div className="dashboard-header">
           <h1>Admin Dashboard</h1>
         </div>
@@ -98,7 +114,7 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <main className='admin-dashboard'>
+      <main className="admin-dashboard">
         <div className="dashboard-header">
           <h1>Admin Dashboard</h1>
         </div>
@@ -111,16 +127,18 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className='admin-dashboard'>
-      {/* Active Broadcast Banner */}
-      {activeBroadcast && (
+    <main className="admin-dashboard">
+      {/* Active Broadcast Banner - Only show if active broadcast exists with message */}
+      {activeBroadcast && activeBroadcast.message && (
         <div className="broadcast-banner">
           <div className="broadcast-content">
             <FontAwesomeIcon icon={faBullhorn} className="broadcast-icon" />
-            <span className="broadcast-message">{activeBroadcast.message}</span>
+            <span className="broadcast-message">
+              {activeBroadcast.message}
+            </span>
           </div>
           <button className="dismiss-btn" onClick={dismissBroadcast}>
-            ×
+            
           </button>
         </div>
       )}
@@ -162,7 +180,9 @@ export default function AdminDashboard() {
             <FontAwesomeIcon icon={faCalendarCheck} />
           </div>
           <div className="stat-content">
-            <h3 className="stat-number">{stats?.pending_appointments || 0}</h3>
+            <h3 className="stat-number">
+              {stats?.pending_appointments || 0}
+            </h3>
             <p className="stat-label">Pending Appointments</p>
             <div className="stat-secondary">
               {stats?.completed_appointments || 0} completed
@@ -189,7 +209,9 @@ export default function AdminDashboard() {
             <FontAwesomeIcon icon={faDollarSign} />
           </div>
           <div className="stat-content">
-            <h3 className="stat-number">${stats?.total_revenue?.toFixed(2) || '0.00'}</h3>
+            <h3 className="stat-number">
+              ${stats?.total_revenue?.toFixed(2) || "0.00"}
+            </h3>
             <p className="stat-label">Total Revenue</p>
             <div className="stat-secondary">
               {stats?.pending_invoices || 0} pending invoices
@@ -204,26 +226,19 @@ export default function AdminDashboard() {
           <div className="stat-content">
             <h3 className="stat-number">100%</h3>
             <p className="stat-label">System Status</p>
-            <div className="stat-secondary">
-              All systems operational
-            </div>
+            <div className="stat-secondary">All systems operational</div>
           </div>
         </div>
       </div>
 
-      {/* Charts Section (Placeholder for future implementation) */}
+      {/* Charts Section */}
       <section className="charts-section">
         <h2 className="section-title">
           <FontAwesomeIcon icon={faChartLine} className="section-icon" />
           System Analytics
         </h2>
         <div className="charts-grid">
-          <div className="chart-container">
-            <h3>Revenue Trend</h3>
-            <div className="chart-placeholder">
-              <p>Chart implementation coming soon</p>
-            </div>
-          </div>
+          <RevenueChart />
           <div className="chart-container">
             <h3>Appointment Volume</h3>
             <div className="chart-placeholder">

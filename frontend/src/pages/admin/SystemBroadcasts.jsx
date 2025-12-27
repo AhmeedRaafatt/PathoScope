@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faBullhorn, 
-  faPlus, 
-  faEdit, 
-  faTrash, 
+import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBullhorn,
+  faPlus,
+  faEdit,
+  faTrash,
   faExclamationTriangle,
   faCheck,
   faTimes,
@@ -12,9 +12,10 @@ import {
   faCalendar,
   faSave,
   faEye,
-  faEyeSlash
-} from '@fortawesome/free-solid-svg-icons';
-import '../../styles/admin/SystemBroadcasts.css';
+  faEyeSlash,
+  faCheckCircle,
+} from "@fortawesome/free-solid-svg-icons";
+import "../../styles/admin/SystemBroadcasts.css";
 
 export default function SystemBroadcasts() {
   const [broadcasts, setBroadcasts] = useState([]);
@@ -24,7 +25,12 @@ export default function SystemBroadcasts() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState(null);
-  const [activeTab, setActiveTab] = useState('active');
+  const [activeTab, setActiveTab] = useState("active");
+  
+  // Success/Error Modal State
+  const [successModal, setSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isError, setIsError] = useState(false);
 
   // Fetch broadcasts
   useEffect(() => {
@@ -34,25 +40,28 @@ export default function SystemBroadcasts() {
   const fetchBroadcasts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const params = new URLSearchParams();
-      
-      if (activeTab === 'active') {
-        params.append('is_active', 'true');
+
+      if (activeTab === "active") {
+        params.append("is_active", "true");
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/broadcasts/?${params}`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/admin/broadcasts/?${params}`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
         setBroadcasts(data);
       } else {
-        throw new Error('Failed to fetch broadcasts');
+        throw new Error("Failed to fetch broadcasts");
       }
     } catch (err) {
       setError(err.message);
@@ -61,78 +70,103 @@ export default function SystemBroadcasts() {
     }
   };
 
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setIsError(false);
+    setSuccessModal(true);
+    setTimeout(() => {
+      setSuccessModal(false);
+    }, 3000);
+  };
+
+  const showErrorMessage = (message) => {
+    setSuccessMessage(message);
+    setIsError(true);
+    setSuccessModal(true);
+  };
+
   const handleCreateBroadcast = async (broadcastData) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://127.0.0.1:8000/api/admin/broadcasts/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(broadcastData)
-      });
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/admin/broadcasts/",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(broadcastData),
+        }
+      );
 
       if (response.ok) {
         await fetchBroadcasts();
         setShowCreateModal(false);
-        alert('Broadcast created successfully');
+        showSuccess(" Broadcast created successfully!");
       } else {
-        throw new Error('Failed to create broadcast');
+        throw new Error("Failed to create broadcast");
       }
     } catch (err) {
-      alert(`Error creating broadcast: ${err.message}`);
+      showErrorMessage(`Error: ${err.message}`);
     }
   };
 
   const handleUpdateBroadcast = async (broadcastData) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/broadcasts/${selectedBroadcast.id}/`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(broadcastData)
-      });
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/admin/broadcasts/${selectedBroadcast.id}/`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(broadcastData),
+        }
+      );
 
       if (response.ok) {
         await fetchBroadcasts();
         setShowEditModal(false);
         setSelectedBroadcast(null);
-        alert('Broadcast updated successfully');
+        showSuccess(" Broadcast updated successfully!");
       } else {
-        throw new Error('Failed to update broadcast');
+        throw new Error("Failed to update broadcast");
       }
     } catch (err) {
-      alert(`Error updating broadcast: ${err.message}`);
+      showErrorMessage(`Error: ${err.message}`);
     }
   };
 
   const handleToggleStatus = async (broadcast) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/broadcasts/${broadcast.id}/`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...broadcast,
-          is_active: !broadcast.is_active
-        })
-      });
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/admin/broadcasts/${broadcast.id}/`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...broadcast,
+            is_active: !broadcast.is_active,
+          }),
+        }
+      );
 
       if (response.ok) {
         await fetchBroadcasts();
-        alert(`Broadcast ${broadcast.is_active ? 'deactivated' : 'activated'} successfully`);
+        const action = broadcast.is_active ? "deactivated" : "activated";
+        showSuccess(` Broadcast ${action} successfully!`);
       } else {
-        throw new Error('Failed to update broadcast status');
+        throw new Error("Failed to update broadcast status");
       }
     } catch (err) {
-      alert(`Error updating broadcast status: ${err.message}`);
+      showErrorMessage(`Error: ${err.message}`);
     }
   };
 
@@ -140,25 +174,28 @@ export default function SystemBroadcasts() {
     if (!selectedBroadcast) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/broadcasts/${selectedBroadcast.id}/`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json',
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/admin/broadcasts/${selectedBroadcast.id}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         await fetchBroadcasts();
         setShowDeleteModal(false);
         setSelectedBroadcast(null);
-        alert('Broadcast deleted successfully');
+        showSuccess(" Broadcast deleted successfully!");
       } else {
-        throw new Error('Failed to delete broadcast');
+        throw new Error("Failed to delete broadcast");
       }
     } catch (err) {
-      alert(`Error deleting broadcast: ${err.message}`);
+      showErrorMessage(`Error: ${err.message}`);
     }
   };
 
@@ -173,21 +210,21 @@ export default function SystemBroadcasts() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const formatExpiryDate = (dateString) => {
-    if (!dateString) return 'No expiry';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    if (!dateString) return "No expiry";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -198,7 +235,7 @@ export default function SystemBroadcasts() {
 
   if (loading && broadcasts.length === 0) {
     return (
-      <main className='system-broadcasts'>
+      <main className="system-broadcasts">
         <div className="page-header">
           <h1>System Broadcasts</h1>
         </div>
@@ -211,14 +248,14 @@ export default function SystemBroadcasts() {
   }
 
   return (
-    <main className='system-broadcasts'>
+    <main className="system-broadcasts">
       {/* Page Header */}
       <header className="page-header">
         <h1>
           <FontAwesomeIcon icon={faBullhorn} className="header-icon" />
           System Broadcasts
         </h1>
-        <button 
+        <button
           className="btn-primary"
           onClick={() => setShowCreateModal(true)}
         >
@@ -238,16 +275,16 @@ export default function SystemBroadcasts() {
       {/* Tabs */}
       <div className="tabs-container">
         <div className="tabs">
-          <button 
-            className={`tab ${activeTab === 'active' ? 'active' : ''}`}
-            onClick={() => setActiveTab('active')}
+          <button
+            className={`tab ${activeTab === "active" ? "active" : ""}`}
+            onClick={() => setActiveTab("active")}
           >
             <FontAwesomeIcon icon={faEye} />
             Active Broadcasts
           </button>
-          <button 
-            className={`tab ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all')}
+          <button
+            className={`tab ${activeTab === "all" ? "active" : ""}`}
+            onClick={() => setActiveTab("all")}
           >
             <FontAwesomeIcon icon={faBullhorn} />
             All Broadcasts
@@ -265,16 +302,24 @@ export default function SystemBroadcasts() {
           </div>
         ) : (
           <div className="broadcasts-grid">
-            {broadcasts.map(broadcast => (
-              <div 
-                key={broadcast.id} 
-                className={`broadcast-card ${broadcast.is_active ? 'active' : 'inactive'} ${isExpired(broadcast.expires_at) ? 'expired' : ''}`}
+            {broadcasts.map((broadcast) => (
+              <div
+                key={broadcast.id}
+                className={`broadcast-card ${broadcast.is_active ? "active" : "inactive"} ${
+                  isExpired(broadcast.expires_at) ? "expired" : ""
+                }`}
               >
                 <div className="broadcast-header">
                   <div className="broadcast-status">
-                    <span className={`status-badge ${broadcast.is_active ? 'active' : 'inactive'}`}>
-                      <FontAwesomeIcon icon={broadcast.is_active ? faEye : faEyeSlash} />
-                      {broadcast.is_active ? 'Active' : 'Inactive'}
+                    <span
+                      className={`status-badge ${
+                        broadcast.is_active ? "active" : "inactive"
+                      }`}
+                    >
+                      <FontAwesomeIcon
+                        icon={broadcast.is_active ? faEye : faEyeSlash}
+                      />
+                      {broadcast.is_active ? "Active" : "Inactive"}
                     </span>
                     {isExpired(broadcast.expires_at) && (
                       <span className="status-badge expired">
@@ -284,21 +329,25 @@ export default function SystemBroadcasts() {
                     )}
                   </div>
                   <div className="broadcast-actions">
-                    <button 
+                    <button
                       className="action-btn edit"
                       onClick={() => openEditModal(broadcast)}
                       title="Edit Broadcast"
                     >
                       <FontAwesomeIcon icon={faEdit} />
                     </button>
-                    <button 
-                      className={`action-btn toggle ${broadcast.is_active ? 'deactivate' : 'activate'}`}
+                    <button
+                      className={`action-btn toggle ${
+                        broadcast.is_active ? "deactivate" : "activate"
+                      }`}
                       onClick={() => handleToggleStatus(broadcast)}
-                      title={broadcast.is_active ? 'Deactivate' : 'Activate'}
+                      title={broadcast.is_active ? "Deactivate" : "Activate"}
                     >
-                      <FontAwesomeIcon icon={broadcast.is_active ? faEyeSlash : faEye} />
+                      <FontAwesomeIcon
+                        icon={broadcast.is_active ? faEye : faEyeSlash}
+                      />
                     </button>
-                    <button 
+                    <button
                       className="action-btn delete"
                       onClick={() => openDeleteModal(broadcast)}
                       title="Delete Broadcast"
@@ -307,11 +356,11 @@ export default function SystemBroadcasts() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="broadcast-content">
                   <h3 className="broadcast-message">{broadcast.message}</h3>
                 </div>
-                
+
                 <div className="broadcast-meta">
                   <div className="meta-item">
                     <FontAwesomeIcon icon={faCalendar} className="meta-icon" />
@@ -323,7 +372,7 @@ export default function SystemBroadcasts() {
                   </div>
                   <div className="meta-item">
                     <FontAwesomeIcon icon={faCheck} className="meta-icon" />
-                    <span>By: {broadcast.created_by_name || 'System'}</span>
+                    <span>By: {broadcast.created_by_name || "System"}</span>
                   </div>
                 </div>
               </div>
@@ -370,18 +419,49 @@ export default function SystemBroadcasts() {
               </div>
               <p>Are you sure you want to delete this broadcast?</p>
               <div className="broadcast-preview">
-                <p><strong>Message:</strong> "{selectedBroadcast.message}"</p>
+                <p>
+                  <strong>Message:</strong> "{selectedBroadcast.message}"
+                </p>
               </div>
-              <p className="warning-text">This action cannot be undone and will permanently remove the broadcast.</p>
+              <p className="warning-text">
+                This action cannot be undone and will permanently remove the broadcast.
+              </p>
             </div>
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
+              <button
+                className="btn-secondary"
+                onClick={() => setShowDeleteModal(false)}
+              >
                 Cancel
               </button>
               <button className="btn-danger" onClick={handleDeleteBroadcast}>
                 <FontAwesomeIcon icon={faTrash} />
                 Delete Broadcast
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success/Error Modal */}
+      {successModal && (
+        <div className="success-modal-overlay">
+          <div className={`success-modal ${isError ? "error" : "success"}`}>
+            <div className="success-modal-header">
+              <FontAwesomeIcon
+                icon={isError ? faExclamationTriangle : faCheckCircle}
+                className={`success-icon ${isError ? "error" : ""}`}
+              />
+              <h2>{isError ? "Error" : "Success"}</h2>
+              <button
+                className="modal-close"
+                onClick={() => setSuccessModal(false)}
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            <div className="success-modal-body">
+              <p>{successMessage}</p>
             </div>
           </div>
         </div>
@@ -393,19 +473,19 @@ export default function SystemBroadcasts() {
 // Broadcast Modal Component
 function BroadcastModal({ title, broadcast, onSubmit, onClose }) {
   const [formData, setFormData] = useState({
-    message: broadcast?.message || '',
+    message: broadcast?.message || "",
     is_active: broadcast?.is_active ?? true,
-    expires_at: broadcast?.expires_at ? broadcast.expires_at.split('T')[0] : ''
+    expires_at: broadcast?.expires_at ? broadcast.expires_at.split("T")[0] : "",
   });
 
   const [errors, setErrors] = useState({});
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Basic validation
     const newErrors = {};
-    if (!formData.message.trim()) newErrors.message = 'Message is required';
+    if (!formData.message.trim()) newErrors.message = "Message is required";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -414,7 +494,9 @@ function BroadcastModal({ title, broadcast, onSubmit, onClose }) {
 
     const submitData = {
       ...formData,
-      expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null
+      expires_at: formData.expires_at
+        ? new Date(formData.expires_at).toISOString()
+        : null,
     };
 
     onSubmit(submitData);
@@ -422,16 +504,16 @@ function BroadcastModal({ title, broadcast, onSubmit, onClose }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
@@ -445,7 +527,7 @@ function BroadcastModal({ title, broadcast, onSubmit, onClose }) {
             <FontAwesomeIcon icon={faTimes} />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="modal-body">
           <div className="form-group">
             <label htmlFor="message">Message *</label>
@@ -456,9 +538,11 @@ function BroadcastModal({ title, broadcast, onSubmit, onClose }) {
               onChange={handleChange}
               placeholder="Enter your broadcast message..."
               rows="4"
-              className={errors.message ? 'error' : ''}
+              className={errors.message ? "error" : ""}
             />
-            {errors.message && <span className="error-text">{errors.message}</span>}
+            {errors.message && (
+              <span className="error-text">{errors.message}</span>
+            )}
           </div>
 
           <div className="form-row">
@@ -470,7 +554,7 @@ function BroadcastModal({ title, broadcast, onSubmit, onClose }) {
                 name="expires_at"
                 value={formData.expires_at}
                 onChange={handleChange}
-                min={new Date().toISOString().split('T')[0]}
+                min={new Date().toISOString().split("T")[0]}
               />
               <small className="form-help">Leave empty for no expiration</small>
             </div>
@@ -494,7 +578,7 @@ function BroadcastModal({ title, broadcast, onSubmit, onClose }) {
             </button>
             <button type="submit" className="btn-primary">
               <FontAwesomeIcon icon={faSave} />
-              {broadcast ? 'Update Broadcast' : 'Create Broadcast'}
+              {broadcast ? "Update Broadcast" : "Create Broadcast"}
             </button>
           </div>
         </form>

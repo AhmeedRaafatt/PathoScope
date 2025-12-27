@@ -10,9 +10,11 @@ User = get_user_model()
 class UserManagementSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'is_active', 'date_joined']
-        # 'role' assumes you have a role field in your custom User model
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ['id', 'username', 'email', 'password', 'role', 'is_active', 'date_joined']
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': True},
+            'date_joined': {'read_only': True}
+        }
 
     def create(self, validated_data):
         # Securely handle password creation for new staff
@@ -20,6 +22,21 @@ class UserManagementSerializer(serializers.ModelSerializer):
         instance = self.Meta.model(**validated_data)
         if password:
             instance.set_password(password)
+        instance.save()
+        return instance
+
+    def update(self, instance, validated_data):
+        # Handle password update if provided
+        password = validated_data.pop('password', None)
+        
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        # Set password if provided
+        if password:
+            instance.set_password(password)
+        
         instance.save()
         return instance
 
