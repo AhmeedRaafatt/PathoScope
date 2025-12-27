@@ -9,7 +9,10 @@ from .views import (
     SaveAnnotationsView,
     UpdateReportView,
     FinalizeReportView,
-    RunAIAnalysisView
+    RunAIAnalysisView,
+    MPRVolumeInfoView,
+    MPRGetSliceView,
+    MPRVolumeDataView,
 )
 
 urlpatterns = [
@@ -29,4 +32,9 @@ urlpatterns = [
     path('case/<int:pk>/save-annotations/', SaveAnnotationsView.as_view(), name='save-annotations'),
     path('case/<int:pk>/save/', SaveAnnotationsView.as_view(), name='save-annotations-alt'),
     path('case/<int:pk>/ai-analyze/', RunAIAnalysisView.as_view(), name='ai-analyze'),
+    
+    # MPR (Multiplanar Reconstruction) URLs
+    path('case/<int:pk>/mpr/info/', MPRVolumeInfoView.as_view(), name='mpr-volume-info'),
+    path('case/<int:pk>/mpr/slice/', MPRGetSliceView.as_view(), name='mpr-get-slice'),
+    path('case/<int:pk>/mpr/volume-data/', MPRVolumeDataView.as_view(), name='mpr-volume-data'),
 ]

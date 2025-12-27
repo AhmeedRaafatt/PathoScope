@@ -147,3 +147,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Allow large file uploads for MRI/CT DICOM series
+DATA_UPLOAD_MAX_NUMBER_FILES = 1000  # Allow up to 1000 files per request (for MRI/CT folders)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 500 * 1024 * 1024  # 500 MB max upload size
+FILE_UPLOAD_MAX_MEMORY_SIZE = 500 * 1024 * 1024  # 500 MB

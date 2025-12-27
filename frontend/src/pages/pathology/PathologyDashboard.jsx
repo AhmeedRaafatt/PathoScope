@@ -116,17 +116,7 @@ export default function PathologyDashboard() {
             <div className="quick-actions">
                 <h2 className="section-title">Quick Actions</h2>
                 <div className="actions-grid">
-                    <a href="/pathology/scheduled" className="action-card">
-                        <FontAwesomeIcon icon={faCalendarCheck} className="action-icon" />
-                        <h3>View Scheduled Biopsies</h3>
-                        <p>Check today's appointments and check-in patients</p>
-                    </a>
-
-                    <a href="/pathology/upload" className="action-card">
-                        <FontAwesomeIcon icon={faUpload} className="action-icon" />
-                        <h3>Upload Slides</h3>
-                        <p>Upload DICOM files for pending cases</p>
-                    </a>
+                    
 
                     <a href="/pathology/queue" className="action-card">
                         <FontAwesomeIcon icon={faMicroscope} className="action-icon" />

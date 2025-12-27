@@ -2,12 +2,16 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.utils import timezone
+from django.http import HttpResponse
 from patient_portal.models import TestOrder, Appointment, Invoice
 from .models import PathologyCase
 from .serializers import PathologyCaseSerializer
 from .ai_utils import detect_nuclei
 from .utils import generate_pathology_report_pdf
+from .mri_utils import process_dicom_folder, get_slice_as_png, get_volume_data_for_rendering
 import uuid
+import zipfile
+import threading
 
 
 # Lab Tech: View scheduled pathology patients
@@ -78,7 +82,7 @@ class AccessionPathologySampleView(APIView):
             return Response({'error': 'Test order not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-# Lab Tech: Upload DICOM file (Backward compatible)
+# Lab Tech: Upload DICOM file(s) - Supports both single file and folder/multiple files for MRI
 class UploadSlideView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
@@ -86,40 +90,116 @@ class UploadSlideView(APIView):
         # Support both new workflow (with case_id) and old workflow (create new case)
         case_id = request.data.get('case_id')
         patient_id = request.data.get('patient')
-        dicom_file = request.FILES.get('dicom_file')
         
-        if not dicom_file:
-            return Response({'error': 'dicom_file is required'}, status=status.HTTP_400_BAD_REQUEST)
+        # Get files - can be single file or multiple
+        dicom_files = request.FILES.getlist('dicom_files')  # Multiple files
+        dicom_file = request.FILES.get('dicom_file')  # Single file (backward compatibility)
+        zip_file = request.FILES.get('zip_file')  # ZIP archive
+        
+        # Determine upload mode
+        is_multi_file = len(dicom_files) > 1 or zip_file
+        
+        if not dicom_file and not dicom_files and not zip_file:
+            return Response({'error': 'dicom_file, dicom_files, or zip_file is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             if case_id:
-                # New workflow: Update existing case
                 case = PathologyCase.objects.get(id=case_id)
-                case.dicom_file = dicom_file
-                case.status = PathologyCase.AWAITING_REVIEW
-                case.save()
             else:
-                # Old workflow: Create new case (for backward compatibility)
                 if not patient_id:
                     return Response({'error': 'patient or case_id is required'}, status=status.HTTP_400_BAD_REQUEST)
                 
-                # Generate accession number for old workflow
                 accession_number = f"PATH-{uuid.uuid4().hex[:8].upper()}"
                 barcode = f"BAR-{uuid.uuid4().hex[:12].upper()}"
                 
                 case = PathologyCase.objects.create(
                     patient_id=patient_id,
-                    dicom_file=dicom_file,
                     accession_number=accession_number,
                     barcode=barcode,
-                    status=PathologyCase.AWAITING_REVIEW
+                    status=PathologyCase.SAMPLE_RECEIVED
                 )
+            
+            # Handle ZIP file
+            if zip_file:
+                dicom_files_data = []
+                try:
+                    with zipfile.ZipFile(zip_file, 'r') as zf:
+                        for name in zf.namelist():
+                            if name.lower().endswith('.dcm') or name.lower().endswith('.dicom'):
+                                with zf.open(name) as f:
+                                    dicom_files_data.append((name, f.read()))
+                except zipfile.BadZipFile:
+                    return Response({'error': 'Invalid ZIP file'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                if len(dicom_files_data) > 1:
+                    # Process as volume in background
+                    def process_async():
+                        try:
+                            process_dicom_folder(case, dicom_files_data)
+                        except Exception as e:
+                            print(f"Error processing volume: {e}")
+                    
+                    thread = threading.Thread(target=process_async)
+                    thread.start()
+                    
+                    case.status = PathologyCase.PROCESSING
+                    case.save(update_fields=['status'])
+                    
+                    serializer = PathologyCaseSerializer(case)
+                    return Response({
+                        **serializer.data,
+                        'message': f'Processing {len(dicom_files_data)} DICOM files into 3D volume...',
+                        'is_processing': True
+                    }, status=status.HTTP_200_OK)
+                elif len(dicom_files_data) == 1:
+                    # Single file in ZIP - treat as regular upload
+                    from django.core.files.base import ContentFile
+                    case.dicom_file.save(dicom_files_data[0][0], ContentFile(dicom_files_data[0][1]), save=True)
+                    case.status = PathologyCase.AWAITING_REVIEW
+                    case.save()
+            
+            # Handle multiple files upload
+            elif len(dicom_files) > 1:
+                dicom_files_data = []
+                for f in dicom_files:
+                    content = f.read()
+                    dicom_files_data.append((f.name, content))
+                
+                # Process as volume in background
+                def process_async():
+                    try:
+                        process_dicom_folder(case, dicom_files_data)
+                    except Exception as e:
+                        print(f"Error processing volume: {e}")
+                
+                thread = threading.Thread(target=process_async)
+                thread.start()
+                
+                case.status = PathologyCase.PROCESSING
+                case.save(update_fields=['status'])
+                
+                serializer = PathologyCaseSerializer(case)
+                return Response({
+                    **serializer.data,
+                    'message': f'Processing {len(dicom_files_data)} DICOM files into 3D volume...',
+                    'is_processing': True
+                }, status=status.HTTP_200_OK)
+            
+            # Handle single file upload (backward compatibility)
+            else:
+                single_file = dicom_file or (dicom_files[0] if dicom_files else None)
+                if single_file:
+                    case.dicom_file = single_file
+                    case.status = PathologyCase.AWAITING_REVIEW
+                    case.save()
             
             serializer = PathologyCaseSerializer(case)
             return Response(serializer.data, status=status.HTTP_200_OK)
             
         except PathologyCase.DoesNotExist:
             return Response({'error': 'Case not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # Pathologist: View "To-Review" queue
@@ -212,10 +292,15 @@ class FinalizeReportView(APIView):
             case.status = PathologyCase.REPORT_READY
             case.save()
             
-            # Update test order status
+            # Update test order status and URLs for patient portal
             if case.test_order:
                 case.test_order.status = TestOrder.REPORT_READY
-                case.test_order.report_url = case.report_pdf.url
+                # Set the full report URL
+                if case.report_pdf:
+                    case.test_order.report_url = request.build_absolute_uri(case.report_pdf.url)
+                # Set slide URL if DICOM exists (for viewing in patient portal)
+                if case.dicom_file:
+                    case.test_order.slide_url = f"/patient/pathology/viewer/{case.id}"
                 case.test_order.save()
             
             return Response({
@@ -267,3 +352,106 @@ class RunAIAnalysisView(APIView):
             return Response({"error": "Case not found"}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+
+# ==============================================================================
+# MPR (Multiplanar Reconstruction) VIEWS
+# ==============================================================================
+
+class MPRVolumeInfoView(APIView):
+    """Get volume dimensions and metadata for the MPR viewer"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, pk):
+        try:
+            case = PathologyCase.objects.get(pk=pk)
+        except PathologyCase.DoesNotExist:
+            return Response({'error': 'Case not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if not case.is_volume:
+            return Response({'error': 'This case is not a 3D volume'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if case.status == 'processing':
+            return Response({
+                'status': 'processing',
+                'message': 'Volume is still being processed'
+            }, status=status.HTTP_200_OK)
+        
+        return Response({
+            'status': 'ready',
+            'is_volume': True,
+            'dimensions': {
+                'axial': case.volume_depth,
+                'sagittal': case.volume_width,
+                'coronal': case.volume_height,
+            },
+            'spacing': {
+                'z': case.slice_thickness or 1.0,
+                'y': case.pixel_spacing_y or 1.0,
+                'x': case.pixel_spacing_x or 1.0,
+            },
+            'window': {
+                'center': case.window_center,
+                'width': case.window_width,
+            },
+            'modality': case.modality,
+            'series_description': case.series_description,
+            'body_part': case.body_part_examined,
+            'num_slices': case.num_slices,
+        }, status=status.HTTP_200_OK)
+
+
+class MPRGetSliceView(APIView):
+    """Get a single slice image from the 3D volume for MPR viewing"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, pk):
+        try:
+            case = PathologyCase.objects.get(pk=pk)
+        except PathologyCase.DoesNotExist:
+            return Response({'error': 'Case not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if not case.is_volume:
+            return Response({'error': 'This case is not a 3D volume'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if case.status == 'processing':
+            return Response({'error': 'Volume is still being processed'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        plane = request.query_params.get('plane', 'axial')
+        index = int(request.query_params.get('index', 0))
+        window_center = request.query_params.get('wc')
+        window_width = request.query_params.get('ww')
+        
+        wc = float(window_center) if window_center else None
+        ww = float(window_width) if window_width else None
+        
+        png_data = get_slice_as_png(case, plane, index, wc, ww)
+        if png_data is None:
+            return Response({'error': 'Invalid slice index or plane'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return HttpResponse(png_data, content_type='image/png')
+
+
+class MPRVolumeDataView(APIView):
+    """Get full volume data for 3D rendering (downsampled)"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, pk):
+        try:
+            case = PathologyCase.objects.get(pk=pk)
+        except PathologyCase.DoesNotExist:
+            return Response({'error': 'Case not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if not case.is_volume:
+            return Response({'error': 'This case is not a 3D volume'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if case.status == 'processing':
+            return Response({'error': 'Volume is still being processed'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        downsample = int(request.query_params.get('downsample', 2))
+        
+        volume_data = get_volume_data_for_rendering(case, downsample)
+        if volume_data is None:
+            return Response({'error': 'Volume file not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response(volume_data, status=status.HTTP_200_OK)

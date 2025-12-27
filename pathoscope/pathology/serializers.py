@@ -29,7 +29,26 @@ class PathologyCaseSerializer(serializers.ModelSerializer):
             'report_pdf',
             'study_date',
             'icd_code',
-            'icd_description'
+            'icd_description',
+            # MPR/Volume fields
+            'is_volume',
+            'num_slices',
+            'volume_depth',
+            'volume_height',
+            'volume_width',
+            'slice_thickness',
+            'pixel_spacing_x',
+            'pixel_spacing_y',
+            'window_center',
+            'window_width',
+            'sagittal_preview',
+            'coronal_preview',
+            'modality',
+            'series_description',
         ]
         read_only_fields = ['uploaded_at', 'image_preview', 'accession_number', 'barcode', 
-                           'is_finalized', 'finalized_by', 'finalized_date', 'report_pdf']
+                           'is_finalized', 'finalized_by', 'finalized_date', 'report_pdf',
+                           'is_volume', 'num_slices', 'volume_depth', 'volume_height', 
+                           'volume_width', 'slice_thickness', 'pixel_spacing_x', 'pixel_spacing_y',
+                           'window_center', 'window_width', 'sagittal_preview', 'coronal_preview',
+                           'modality', 'series_description']

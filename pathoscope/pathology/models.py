@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pydicom
 from PIL import Image
@@ -13,12 +14,14 @@ class PathologyCase(models.Model):
     AWAITING_REVIEW = 'awaiting_review'
     IN_REVIEW = 'in_review'
     REPORT_READY = 'report_ready'
+    PROCESSING = 'processing'
     
     STATUS_CHOICES = [
         (SAMPLE_RECEIVED, 'Sample Received'),
         (AWAITING_REVIEW, 'Awaiting Pathologist Review'),
         (IN_REVIEW, 'In Review'),
         (REPORT_READY, 'Report Ready'),
+        (PROCESSING, 'Processing Volume'),
     ]
     
     # 1. Link to Patient
@@ -31,7 +34,7 @@ class PathologyCase(models.Model):
     accession_number = models.CharField(max_length=50, unique=True, blank=True)
     barcode = models.CharField(max_length=100, unique=True, blank=True)
     
-    # 3. The DICOM File
+    # 3. The DICOM File (for single files - backward compatibility)
     dicom_file = models.FileField(upload_to='dicom_slides/', blank=True, null=True)
 
     # Preview Image (Auto-Generated)
@@ -61,17 +64,67 @@ class PathologyCase(models.Model):
     # 9. ICD-10 Integration
     icd_code = models.CharField(max_length=20, blank=True, null=True)
     icd_description = models.CharField(max_length=255, blank=True, null=True)
+    
+    # 10. MRI/CT Volume Support (for MPR)
+    is_volume = models.BooleanField(default=False)  # True if this is a 3D volume (multiple slices)
+    num_slices = models.IntegerField(default=0)
+    volume_file = models.FileField(upload_to='dicom_volumes/', blank=True, null=True)  # Compressed numpy volume
+    modality = models.CharField(max_length=10, blank=True)  # MR, CT, etc.
+    series_description = models.CharField(max_length=255, blank=True)
+    
+    # Volume dimensions
+    volume_depth = models.IntegerField(default=0)  # Z (number of slices)
+    volume_height = models.IntegerField(default=0)  # Y (rows)
+    volume_width = models.IntegerField(default=0)  # X (columns)
+    slice_thickness = models.FloatField(null=True, blank=True)
+    pixel_spacing_x = models.FloatField(null=True, blank=True)
+    pixel_spacing_y = models.FloatField(null=True, blank=True)
+    
+    # Window/Level for display
+    window_center = models.FloatField(null=True, blank=True)
+    window_width = models.FloatField(null=True, blank=True)
+    
+    # Preview images for MPR planes
+    sagittal_preview = models.ImageField(upload_to='dicom_previews/', blank=True, null=True)
+    coronal_preview = models.ImageField(upload_to='dicom_previews/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # Save normally first so the file exists on disk
         super().save(*args, **kwargs)
 
-        # If we have a DICOM but no preview, try to generate one
-        if self.dicom_file and not self.image_preview:
+        # If we have a DICOM but no preview, try to generate one (single file mode)
+        if self.dicom_file and not self.image_preview and not self.is_volume:
             try:
                 self.generate_preview()
             except Exception as e:
                 print(f"Error converting DICOM preview: {e}")
+
+    def get_volume_array(self):
+        """Load the 3D volume numpy array from file"""
+        if self.volume_file:
+            return np.load(self.volume_file.path)
+        return None
+    
+    def get_axial_slice(self, index):
+        """Get a single axial slice (original orientation)"""
+        volume = self.get_volume_array()
+        if volume is not None and 0 <= index < volume.shape[0]:
+            return volume[index, :, :]
+        return None
+    
+    def get_sagittal_slice(self, index):
+        """Get a single sagittal slice (side view)"""
+        volume = self.get_volume_array()
+        if volume is not None and 0 <= index < volume.shape[2]:
+            return volume[:, :, index]
+        return None
+    
+    def get_coronal_slice(self, index):
+        """Get a single coronal slice (front view)"""
+        volume = self.get_volume_array()
+        if volume is not None and 0 <= index < volume.shape[1]:
+            return volume[:, index, :]
+        return None
 
     def generate_preview(self):
         """

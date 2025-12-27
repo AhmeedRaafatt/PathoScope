@@ -47,9 +47,55 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
 
 class TestOrderSerializer(serializers.ModelSerializer):
+    # Include pathology case details for finalized reports
+    pathology_case_id = serializers.SerializerMethodField()
+    icd_code = serializers.SerializerMethodField()
+    icd_description = serializers.SerializerMethodField()
+    accession_number = serializers.SerializerMethodField()
+    pathologist_name = serializers.SerializerMethodField()
+    finalized_date = serializers.SerializerMethodField()
+    image_preview = serializers.SerializerMethodField()
+    
     class Meta:
         model = TestOrder
-        fields = ['id', 'test_type', 'test_name', 'order_date', 'status', 'report_url', 'slide_url', 'price']
+        fields = ['id', 'test_type', 'test_name', 'order_date', 'status', 'report_url', 'slide_url', 'price',
+                  'pathology_case_id', 'icd_code', 'icd_description', 'accession_number', 
+                  'pathologist_name', 'finalized_date', 'image_preview']
+    
+    def get_pathology_case_id(self, obj):
+        if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case'):
+            return obj.pathology_case.id
+        return None
+    
+    def get_icd_code(self, obj):
+        if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case') and obj.pathology_case.is_finalized:
+            return obj.pathology_case.icd_code
+        return None
+    
+    def get_icd_description(self, obj):
+        if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case') and obj.pathology_case.is_finalized:
+            return obj.pathology_case.icd_description
+        return None
+    
+    def get_accession_number(self, obj):
+        if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case'):
+            return obj.pathology_case.accession_number
+        return None
+    
+    def get_pathologist_name(self, obj):
+        if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case') and obj.pathology_case.finalized_by:
+            return obj.pathology_case.finalized_by.username
+        return None
+    
+    def get_finalized_date(self, obj):
+        if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case') and obj.pathology_case.finalized_date:
+            return obj.pathology_case.finalized_date.isoformat()
+        return None
+    
+    def get_image_preview(self, obj):
+        if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case') and obj.pathology_case.image_preview:
+            return obj.pathology_case.image_preview.url
+        return None
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
