@@ -10,7 +10,11 @@
 
 /* ===== SIDEBAR STYLES (Hematology Design) ===== */
 .admin-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
   width: 250px;
+  height: 100vh;
   background-color: #eeeef9;
   display: flex;
   flex-direction: column;
@@ -18,8 +22,8 @@
   overflow-y: auto;
   border-right: 1px solid #e5e7eb;
   z-index: 100;
-  border-radius: 4px;
-  min-height: 100vh;
+  border-radius: 0;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
 }
 
 /* Sidebar Header */
@@ -29,6 +33,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .sidebar-header span {
@@ -39,65 +44,23 @@
   letter-spacing: 0.5px;
 }
 
-.sidebar-header .sidebar-logo {
+.sidebar-header img {
   width: 130px;
   height: auto;
   display: block;
   object-fit: contain;
 }
 
-/* ===== MAIN CONTENT WRAPPER (FLEXBOX COLUMN) ===== */
+/* Navigation Sidebar */
 .admin-content {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100vh;
   background-color: #FAFAFD;
+  min-height: 100vh;
+  margin-left: 250px;
 }
 
-/* ===== HEADER STYLES (COMPACT, AT TOP) ===== */
-.admin-header {
-  background-color: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.01);
-  min-height: 48px;
-  flex-shrink: 0;
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.admin-header h1 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #122056;
-  margin: 0;
-  padding: 0;
-}
-
-.admin-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #9ca3af;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.admin-indicator svg {
-  font-size: 14px;
-  color: #5B65DC;
-}
-
-/* ===== NAVIGATION ===== */
 .sidebar-nav {
   flex: 1;
   display: flex;
@@ -105,6 +68,7 @@
   justify-content: flex-start;
   align-items: flex-start;
   padding: 12px 8px;
+  overflow-y: auto;
 }
 
 .nav-link {
@@ -119,29 +83,24 @@
   text-decoration: none;
   color: #2d3748;
   background-color: transparent;
-  width: 100%;
+  width: calc(100% - 24px);
   font-size: 14px;
   font-weight: 500;
 }
 
 .nav-link:hover {
   background-color: #f3f4f6;
-  color: #2d3748;
+  color: #122056;
 }
 
-/* Active state - no background, just purple text */
 .nav-link.active {
-  background-color: transparent;
-  color: #5B65DC !important;
+  background-color: #5B65DC;
+  color: white;
   font-weight: 600;
 }
 
-.nav-link.active span {
-  color: #5B65DC !important;
-}
-
 .nav-link.active svg {
-  color: #5B65DC !important;
+  color: white;
 }
 
 .nav-link svg {
@@ -156,7 +115,11 @@
   color: #5B65DC;
 }
 
-/* ===== LOGOUT BUTTON ===== */
+.nav-link.active svg {
+  color: white;
+}
+
+/* Logout Button */
 .sidebar-footer {
   padding: 16px 8px;
   border-top: 1px solid #e5e7eb;
@@ -202,7 +165,44 @@
   flex: 1;
 }
 
-/* ===== BROADCAST BANNER ===== */
+/* ===== HEADER STYLES ===== */
+.admin-header {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.admin-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #122056;
+  margin: 0;
+}
+
+.admin-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ===== MAIN CONTENT AREA ===== */
+.admin-main-content {
+  flex: 1;
+  padding: 32px;
+  background-color: #FAFAFD;
+  overflow-y: auto;
+}
+
 .broadcast-banner {
   background: linear-gradient(90deg, #fef3c7 0%, #fef3c7 100%);
   border: 1px solid #fbbf24;
@@ -279,9 +279,9 @@
   .admin-sidebar {
     width: 220px;
   }
-  
-  .sidebar-header .sidebar-logo {
-    width: 110px;
+
+  .admin-content {
+    margin-left: 220px;
   }
 }
 
@@ -291,30 +291,77 @@
   }
 
   .admin-sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
     width: 100%;
     height: auto;
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
+    border-radius: 0;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: visible;
+    z-index: 100;
   }
 
-  .sidebar-header {
-    padding: 16px 12px;
+  .sidebar-nav {
+    flex-direction: row;
+    padding: 8px 12px;
+    width: 100%;
   }
 
-  .sidebar-header .sidebar-logo {
-    width: 100px;
+  .nav-link {
+    width: auto;
+    padding: 8px 12px;
+    margin-bottom: 0;
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+
+  .sidebar-footer {
+    padding: 8px 12px;
+    border-top: none;
+    border-left: 1px solid #e5e7eb;
+  }
+
+  .logout-btn {
+    width: auto;
+    padding: 8px 12px;
+  }
+
+  .admin-content {
+    margin-left: 0;
+    padding-bottom: 60px;
   }
 
   .admin-header {
-    padding: 10px 16px;
-    min-height: 48px;
+    padding: 16px;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .admin-header h1 {
-    font-size: 14px;
+    font-size: 20px;
   }
 
-  .admin-indicator {
-    font-size: 11px;
+  .admin-main-content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header h1 {
+    font-size: 18px;
+  }
+
+  .admin-main-content {
+    padding: 12px;
+  }
+
+  .sidebar-header img {
+    width: 100px;
   }
 }
