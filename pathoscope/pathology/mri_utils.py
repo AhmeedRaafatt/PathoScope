@@ -135,7 +135,7 @@ def process_dicom_folder(case, dicom_files_data):
 
 
 def generate_mpr_previews(case, volume):
-    """Generate preview images for axial, sagittal, and coronal views"""
+    """Generate preview images for axial, sagittal, and coronal views with correct aspect ratio"""
     
     def normalize_to_uint8(arr, wc=None, ww=None):
         """Normalize array to 0-255 range with optional windowing"""
@@ -156,7 +156,13 @@ def generate_mpr_previews(case, volume):
     wc = case.window_center
     ww = case.window_width
     
+    # Get voxel spacing for aspect ratio correction
+    spZ = case.slice_thickness or 1.0
+    spY = case.pixel_spacing_y or 1.0
+    spX = case.pixel_spacing_x or 1.0
+    
     # Axial preview (middle slice) - this becomes image_preview
+    # No aspect correction needed for axial (in-plane view)
     axial_idx = volume.shape[0] // 2
     axial_slice = normalize_to_uint8(volume[axial_idx, :, :], wc, ww)
     axial_img = Image.fromarray(axial_slice)
@@ -164,20 +170,40 @@ def generate_mpr_previews(case, volume):
     axial_img.save(buffer, format='PNG')
     case.image_preview.save(f'axial_{case.id}.png', ContentFile(buffer.getvalue()), save=False)
     
-    # Sagittal preview (middle slice)
+    # Sagittal preview (middle slice) - looking from the side
+    # Shows Y (rows) horizontally and Z (slices) vertically
     sagittal_idx = volume.shape[2] // 2
     sagittal_slice = normalize_to_uint8(volume[:, :, sagittal_idx], wc, ww)
     sagittal_slice = np.flipud(sagittal_slice)  # Correct orientation
     sagittal_img = Image.fromarray(sagittal_slice)
+    
+    # Apply aspect ratio correction: height (Z) needs scaling relative to width (Y)
+    if spZ != spY:
+        orig_height, orig_width = sagittal_slice.shape
+        scale_factor = spZ / spY
+        new_height = int(orig_height * scale_factor)
+        if new_height > 0:
+            sagittal_img = sagittal_img.resize((orig_width, new_height), Image.Resampling.LANCZOS)
+    
     buffer = BytesIO()
     sagittal_img.save(buffer, format='PNG')
     case.sagittal_preview.save(f'sagittal_{case.id}.png', ContentFile(buffer.getvalue()), save=False)
     
-    # Coronal preview (middle slice)
+    # Coronal preview (middle slice) - looking from the front
+    # Shows X (columns) horizontally and Z (slices) vertically
     coronal_idx = volume.shape[1] // 2
     coronal_slice = normalize_to_uint8(volume[:, coronal_idx, :], wc, ww)
     coronal_slice = np.flipud(coronal_slice)  # Correct orientation
     coronal_img = Image.fromarray(coronal_slice)
+    
+    # Apply aspect ratio correction: height (Z) needs scaling relative to width (X)
+    if spZ != spX:
+        orig_height, orig_width = coronal_slice.shape
+        scale_factor = spZ / spX
+        new_height = int(orig_height * scale_factor)
+        if new_height > 0:
+            coronal_img = coronal_img.resize((orig_width, new_height), Image.Resampling.LANCZOS)
+    
     buffer = BytesIO()
     coronal_img.save(buffer, format='PNG')
     case.coronal_preview.save(f'coronal_{case.id}.png', ContentFile(buffer.getvalue()), save=False)
@@ -186,6 +212,7 @@ def generate_mpr_previews(case, volume):
 def get_slice_as_png(case, plane, index, window_center=None, window_width=None):
     """
     Extract a single slice from the volume and return as PNG bytes.
+    Handles aspect ratio correction for non-isotropic voxels.
     
     Args:
         case: PathologyCase instance
@@ -204,21 +231,39 @@ def get_slice_as_png(case, plane, index, window_center=None, window_width=None):
     wc = window_center if window_center is not None else case.window_center
     ww = window_width if window_width is not None else case.window_width
     
+    # Get voxel spacing for aspect ratio correction
+    spZ = case.slice_thickness or 1.0  # spacing between slices
+    spY = case.pixel_spacing_y or 1.0  # row spacing
+    spX = case.pixel_spacing_x or 1.0  # column spacing
+    
     if plane == 'axial':
+        # Axial: looking down Z axis, shows X-Y plane
+        # Aspect ratio: spX : spY (usually 1:1 for in-plane)
         if 0 <= index < volume.shape[0]:
             slice_data = volume[index, :, :]
+            aspect_ratio = spX / spY  # width/height ratio
         else:
             return None
     elif plane == 'sagittal':
+        # Sagittal: looking from side (X axis), shows Y-Z plane
+        # We're slicing along X (columns), showing Z (depth) vs Y (rows)
+        # Aspect ratio needs: spY (horizontal) : spZ (vertical)
         if 0 <= index < volume.shape[2]:
-            slice_data = volume[:, :, index]
-            slice_data = np.flipud(slice_data)
+            slice_data = volume[:, :, index]  # shape: (Z, Y)
+            slice_data = np.flipud(slice_data)  # Flip for correct orientation
+            # Need to resize because Z-spacing (slice thickness) differs from Y-spacing
+            aspect_ratio = spY / spZ  # width/height in display
         else:
             return None
     elif plane == 'coronal':
+        # Coronal: looking from front (Y axis), shows X-Z plane
+        # We're slicing along Y (rows), showing Z (depth) vs X (columns)
+        # Aspect ratio needs: spX (horizontal) : spZ (vertical)
         if 0 <= index < volume.shape[1]:
-            slice_data = volume[:, index, :]
-            slice_data = np.flipud(slice_data)
+            slice_data = volume[:, index, :]  # shape: (Z, X)
+            slice_data = np.flipud(slice_data)  # Flip for correct orientation
+            # Need to resize because Z-spacing differs from X-spacing
+            aspect_ratio = spX / spZ  # width/height in display
         else:
             return None
     else:
@@ -242,6 +287,29 @@ def get_slice_as_png(case, plane, index, window_center=None, window_width=None):
     
     # Convert to image
     img = Image.fromarray(slice_data)
+    
+    # Apply aspect ratio correction for non-isotropic voxels (sagittal/coronal views)
+    if plane in ['sagittal', 'coronal']:
+        # Calculate correct display size
+        orig_height, orig_width = slice_data.shape
+        
+        # The image height represents Z-axis (slices), width represents Y or X
+        # We need to stretch/compress height based on slice thickness vs pixel spacing
+        if spZ != spY and spZ != spX:
+            # Calculate the scaling factor for height (Z dimension)
+            if plane == 'sagittal':
+                # Height is Z, width is Y - scale height by spZ/spY ratio
+                scale_factor = spZ / spY
+            else:  # coronal
+                # Height is Z, width is X - scale height by spZ/spX ratio  
+                scale_factor = spZ / spX
+            
+            new_height = int(orig_height * scale_factor)
+            new_width = orig_width
+            
+            if new_height > 0 and new_width > 0:
+                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    
     buffer = BytesIO()
     img.save(buffer, format='PNG')
     return buffer.getvalue()

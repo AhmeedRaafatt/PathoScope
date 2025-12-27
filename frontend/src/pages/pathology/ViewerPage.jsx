@@ -1268,14 +1268,16 @@ const VolumeRenderer3D = ({ caseId, volumeInfo }) => {
     const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
     const [volumeData, setVolumeData] = useState(null);
     const [loadingVolume, setLoadingVolume] = useState(true);
-    const [renderMode, setRenderMode] = useState('mip'); // 'mip', 'composite', 'surface', 'xray'
-    const [threshold, setThreshold] = useState(80);
+    const [renderMode, setRenderMode] = useState('composite'); // Start with best mode
+    const [threshold, setThreshold] = useState(60); // Higher for better surface detection
     const [brightness, setBrightness] = useState(120);
-    const [colorMap, setColorMap] = useState('grayscale'); // 'grayscale', 'hot', 'cool', 'bone', 'rainbow'
-    const [opacity, setOpacity] = useState(0.8);
-    const [sampleRate, setSampleRate] = useState(1); // Higher = better quality, slower
+    const [colorMap, setColorMap] = useState('bone'); // Bone colormap for medical images
+    const [opacity, setOpacity] = useState(0.7);
+    const [sampleRate, setSampleRate] = useState(1.5);
     const [autoRotate, setAutoRotate] = useState(false);
     const [lightPosition, setLightPosition] = useState({ x: 1, y: 1, z: 1 });
+    const [minIntensity, setMinIntensity] = useState(40); // Higher default to cut more background
+    const [gradientThreshold, setGradientThreshold] = useState(15); // For surface edge detection
 
     // Color transfer functions
     const colorMaps = {
@@ -1352,51 +1354,7 @@ const VolumeRenderer3D = ({ caseId, volumeInfo }) => {
     useEffect(() => {
         if (!canvasRef.current || !volumeData) return;
         renderVolume();
-    }, [volumeData, rotation, zoom, renderMode, threshold, brightness, colorMap, opacity, sampleRate]);
-
-    // Trilinear interpolation for smoother sampling
-    const sampleVolume = (data, dims, x, y, z) => {
-        const [depth, rows, cols] = dims;
-        if (x < 0 || x >= cols - 1 || y < 0 || y >= rows - 1 || z < 0 || z >= depth - 1) return 0;
-        
-        const x0 = Math.floor(x), y0 = Math.floor(y), z0 = Math.floor(z);
-        const xd = x - x0, yd = y - y0, zd = z - z0;
-        
-        const idx = (z, y, x) => z * rows * cols + y * cols + x;
-        
-        // Get 8 corner values
-        const c000 = data[idx(z0, y0, x0)] || 0;
-        const c001 = data[idx(z0, y0, x0 + 1)] || 0;
-        const c010 = data[idx(z0, y0 + 1, x0)] || 0;
-        const c011 = data[idx(z0, y0 + 1, x0 + 1)] || 0;
-        const c100 = data[idx(z0 + 1, y0, x0)] || 0;
-        const c101 = data[idx(z0 + 1, y0, x0 + 1)] || 0;
-        const c110 = data[idx(z0 + 1, y0 + 1, x0)] || 0;
-        const c111 = data[idx(z0 + 1, y0 + 1, x0 + 1)] || 0;
-        
-        // Trilinear interpolation
-        const c00 = c000 * (1 - xd) + c001 * xd;
-        const c01 = c010 * (1 - xd) + c011 * xd;
-        const c10 = c100 * (1 - xd) + c101 * xd;
-        const c11 = c110 * (1 - xd) + c111 * xd;
-        const c0 = c00 * (1 - yd) + c01 * yd;
-        const c1 = c10 * (1 - yd) + c11 * yd;
-        return c0 * (1 - zd) + c1 * zd;
-    };
-
-    // Calculate gradient for lighting (central differences)
-    const calcGradient = (data, dims, x, y, z) => {
-        const [depth, rows, cols] = dims;
-        const sample = (x, y, z) => {
-            if (x < 0 || x >= cols || y < 0 || y >= rows || z < 0 || z >= depth) return 0;
-            return data[z * rows * cols + y * cols + x] || 0;
-        };
-        const gx = sample(Math.floor(x) + 1, Math.floor(y), Math.floor(z)) - sample(Math.floor(x) - 1, Math.floor(y), Math.floor(z));
-        const gy = sample(Math.floor(x), Math.floor(y) + 1, Math.floor(z)) - sample(Math.floor(x), Math.floor(y) - 1, Math.floor(z));
-        const gz = sample(Math.floor(x), Math.floor(y), Math.floor(z) + 1) - sample(Math.floor(x), Math.floor(y), Math.floor(z) - 1);
-        const len = Math.sqrt(gx * gx + gy * gy + gz * gz) || 1;
-        return { x: gx / len, y: gy / len, z: gz / len };
-    };
+    }, [volumeData, rotation, zoom, renderMode, threshold, brightness, colorMap, opacity, sampleRate, minIntensity, gradientThreshold]);
 
     const renderVolume = () => {
         const canvas = canvasRef.current;
@@ -1419,170 +1377,320 @@ const VolumeRenderer3D = ({ caseId, volumeInfo }) => {
             return;
         }
 
-        const { data, dimensions } = volumeData;
+        const { data, dimensions, spacing } = volumeData;
         const [depth, rows, cols] = dimensions;
+        
+        // Get spacing (use actual values from DICOM, default to proportional if not available)
+        const spZ = spacing?.[0] || 1;
+        const spY = spacing?.[1] || 1;
+        const spX = spacing?.[2] || 1;
+        
+        // Calculate real-world dimensions for proper aspect ratio
+        const realZ = depth * spZ;
+        const realY = rows * spY;
+        const realX = cols * spX;
+        
+        // Normalize to unit cube with correct aspect ratio
+        const maxDim = Math.max(realZ, realY, realX);
+        const normZ = realZ / maxDim;
+        const normY = realY / maxDim;
+        const normX = realX / maxDim;
 
         const imageData = ctx.createImageData(width, height);
         const pixels = imageData.data;
 
-        const cosX = Math.cos(rotation.x);
-        const sinX = Math.sin(rotation.x);
-        const cosY = Math.cos(rotation.y);
-        const sinY = Math.sin(rotation.y);
+        // Rotation matrices
+        const cosRx = Math.cos(rotation.x);
+        const sinRx = Math.sin(rotation.x);
+        const cosRy = Math.cos(rotation.y);
+        const sinRy = Math.sin(rotation.y);
 
         const centerX = width / 2;
         const centerY = height / 2;
-        const scale = zoom * Math.min(width, height) / Math.max(rows, cols, depth) * 0.7;
+        
+        // Scale factor for display
+        const displayScale = zoom * Math.min(width, height) * 0.45;
 
         const colorFn = colorMaps[colorMap] || colorMaps.grayscale;
         const brightnessMultiplier = brightness / 100;
-        const step = 1 / sampleRate;
-
-        // Normalize light direction
+        
+        // Ray step size - smaller = better quality but slower
+        const numSteps = Math.floor(150 * sampleRate);
+        
+        // Light direction (normalized)
         const lightLen = Math.sqrt(lightPosition.x ** 2 + lightPosition.y ** 2 + lightPosition.z ** 2);
-        const light = { x: lightPosition.x / lightLen, y: lightPosition.y / lightLen, z: lightPosition.z / lightLen };
+        const lightDir = { 
+            x: lightPosition.x / lightLen, 
+            y: lightPosition.y / lightLen, 
+            z: lightPosition.z / lightLen 
+        };
 
-        // Ray-casting with advanced rendering
+        // Helper: Get voxel value with trilinear interpolation
+        const getVoxel = (vx, vy, vz) => {
+            if (vx < 0 || vx >= cols - 1 || vy < 0 || vy >= rows - 1 || vz < 0 || vz >= depth - 1) return 0;
+            
+            const x0 = Math.floor(vx), y0 = Math.floor(vy), z0 = Math.floor(vz);
+            const xd = vx - x0, yd = vy - y0, zd = vz - z0;
+            
+            const idx = (z, y, x) => z * rows * cols + y * cols + x;
+            
+            const c000 = data[idx(z0, y0, x0)] || 0;
+            const c001 = data[idx(z0, y0, x0 + 1)] || 0;
+            const c010 = data[idx(z0, y0 + 1, x0)] || 0;
+            const c011 = data[idx(z0, y0 + 1, x0 + 1)] || 0;
+            const c100 = data[idx(z0 + 1, y0, x0)] || 0;
+            const c101 = data[idx(z0 + 1, y0, x0 + 1)] || 0;
+            const c110 = data[idx(z0 + 1, y0 + 1, x0)] || 0;
+            const c111 = data[idx(z0 + 1, y0 + 1, x0 + 1)] || 0;
+            
+            const c00 = c000 * (1 - xd) + c001 * xd;
+            const c01 = c010 * (1 - xd) + c011 * xd;
+            const c10 = c100 * (1 - xd) + c101 * xd;
+            const c11 = c110 * (1 - xd) + c111 * xd;
+            const c0 = c00 * (1 - yd) + c01 * yd;
+            const c1 = c10 * (1 - yd) + c11 * yd;
+            return c0 * (1 - zd) + c1 * zd;
+        };
+
+        // Helper: Calculate gradient at position
+        const getGradient = (vx, vy, vz) => {
+            const d = 1;
+            const gx = getVoxel(vx + d, vy, vz) - getVoxel(vx - d, vy, vz);
+            const gy = getVoxel(vx, vy + d, vz) - getVoxel(vx, vy - d, vz);
+            const gz = getVoxel(vx, vy, vz + d) - getVoxel(vx, vy, vz - d);
+            const mag = Math.sqrt(gx * gx + gy * gy + gz * gz) || 1;
+            return { x: gx / mag, y: gy / mag, z: gz / mag, magnitude: mag };
+        };
+
+        // RAY CASTING - For each pixel on screen
         for (let py = 0; py < height; py++) {
             for (let px = 0; px < width; px++) {
-                const sx = (px - centerX) / scale;
-                const sy = (py - centerY) / scale;
+                // Screen coordinates -> normalized device coordinates
+                const ndcX = (px - centerX) / displayScale;
+                const ndcY = (py - centerY) / displayScale;
 
-                let accColor = { r: 0, g: 0, b: 0 };
+                // Ray origin (camera position) and direction
+                // We use orthographic projection for medical imaging
+                // Ray starts from far away and goes into the volume
+                
+                // Create ray direction pointing into screen (Z direction)
+                // then rotate by view angles
+                let rayDirX = 0;
+                let rayDirY = 0;
+                let rayDirZ = -1; // Pointing into screen
+                
+                // Apply rotation to ray direction
+                // Rotate around X axis
+                let tempY = rayDirY * cosRx - rayDirZ * sinRx;
+                let tempZ = rayDirY * sinRx + rayDirZ * cosRx;
+                rayDirY = tempY;
+                rayDirZ = tempZ;
+                
+                // Rotate around Y axis
+                let tempX = rayDirX * cosRy + rayDirZ * sinRy;
+                tempZ = -rayDirX * sinRy + rayDirZ * cosRy;
+                rayDirX = tempX;
+                rayDirZ = tempZ;
+
+                // Ray origin in world space (start from screen plane)
+                // Rotate screen position to get ray start point
+                let rayOriginX = ndcX;
+                let rayOriginY = ndcY;
+                let rayOriginZ = 1.5; // Start in front of volume
+                
+                // Rotate ray origin
+                tempY = rayOriginY * cosRx - rayOriginZ * sinRx;
+                tempZ = rayOriginY * sinRx + rayOriginZ * cosRx;
+                rayOriginY = tempY;
+                rayOriginZ = tempZ;
+                
+                tempX = rayOriginX * cosRy + rayOriginZ * sinRy;
+                tempZ = -rayOriginX * sinRy + rayOriginZ * cosRy;
+                rayOriginX = tempX;
+                rayOriginZ = tempZ;
+
+                // Accumulate color along ray
+                let accR = 0, accG = 0, accB = 0;
                 let accAlpha = 0;
                 let maxVal = 0;
                 let sumVal = 0;
-                let count = 0;
+                let sampleCount = 0;
                 let hitSurface = false;
 
-                // Cast ray through volume
-                const rayLen = Math.max(depth, rows, cols) * 1.5;
-                for (let t = -rayLen / 2; t < rayLen / 2 && accAlpha < 0.98; t += step) {
-                    // Apply rotation
-                    let x = sx;
-                    let y = sy * cosX - t * sinX;
-                    let z = sy * sinX + t * cosX;
-
-                    const tempX = x * cosY + z * sinY;
-                    z = -x * sinY + z * cosY;
-                    x = tempX;
-
-                    // Map to volume coordinates
-                    const vx = x + cols / 2;
-                    const vy = y + rows / 2;
-                    const vz = z + depth / 2;
-
-                    if (vx >= 0 && vx < cols && vy >= 0 && vy < rows && vz >= 0 && vz < depth) {
-                        const val = sampleRate > 1 
-                            ? sampleVolume(data, dimensions, vx, vy, vz)
-                            : (data[Math.floor(vz) * rows * cols + Math.floor(vy) * cols + Math.floor(vx)] || 0);
-                        
-                        if (renderMode === 'mip') {
-                            maxVal = Math.max(maxVal, val);
-                        } else if (renderMode === 'xray') {
-                            sumVal += val;
-                            count++;
-                        } else if (renderMode === 'surface') {
-                            if (val > threshold && !hitSurface) {
+                // March along ray
+                const stepSize = 3.0 / numSteps;
+                for (let i = 0; i < numSteps && accAlpha < 0.98; i++) {
+                    const t = i * stepSize;
+                    
+                    // Current position along ray
+                    const worldX = rayOriginX + rayDirX * t;
+                    const worldY = rayOriginY + rayDirY * t;
+                    const worldZ = rayOriginZ + rayDirZ * t;
+                    
+                    // Convert world coords to volume coords
+                    // World is centered at 0, volume goes from 0 to dimensions
+                    const vx = (worldX / normX + 0.5) * cols;
+                    const vy = (worldY / normY + 0.5) * rows;
+                    const vz = (worldZ / normZ + 0.5) * depth;
+                    
+                    // Check bounds
+                    if (vx < 0 || vx >= cols || vy < 0 || vy >= rows || vz < 0 || vz >= depth) {
+                        continue;
+                    }
+                    
+                    // Sample volume
+                    const val = getVoxel(vx, vy, vz);
+                    
+                    // Skip low intensity (background)
+                    if (val < minIntensity) continue;
+                    
+                    // Different rendering modes
+                    if (renderMode === 'mip') {
+                        maxVal = Math.max(maxVal, val);
+                    } 
+                    else if (renderMode === 'xray') {
+                        sumVal += val - minIntensity;
+                        sampleCount++;
+                    }
+                    else if (renderMode === 'surface') {
+                        if (val > threshold && !hitSurface) {
+                            // Check gradient for surface detection
+                            const grad = getGradient(vx, vy, vz);
+                            
+                            if (grad.magnitude > gradientThreshold) {
                                 hitSurface = true;
-                                // Calculate gradient for Phong shading
-                                const grad = calcGradient(data, dimensions, vx, vy, vz);
-                                // Rotate gradient to view space
-                                let gx = grad.x;
-                                let gy = grad.y * cosX + grad.z * sinX;
-                                let gz = -grad.y * sinX + grad.z * cosX;
-                                const tempGx = gx * cosY - gz * sinY;
-                                gz = gx * sinY + gz * cosY;
-                                gx = tempGx;
                                 
-                                // Phong lighting
-                                const diffuse = Math.max(0, -(gx * light.x + gy * light.y + gz * light.z));
+                                // Transform gradient normal to view space
+                                let nx = grad.x, ny = grad.y, nz = grad.z;
+                                
+                                // Rotate normal (same as ray but inverse)
+                                tempY = ny * cosRx + nz * sinRx;
+                                tempZ = -ny * sinRx + nz * cosRx;
+                                ny = tempY; nz = tempZ;
+                                
+                                tempX = nx * cosRy - nz * sinRy;
+                                tempZ = nx * sinRy + nz * cosRy;
+                                nx = tempX; nz = tempZ;
+                                
+                                // Phong shading
+                                const NdotL = Math.max(0, nx * lightDir.x + ny * lightDir.y + nz * lightDir.z);
                                 const ambient = 0.3;
-                                const lightIntensity = ambient + (1 - ambient) * diffuse;
+                                const diffuse = 0.6 * NdotL;
+                                const specular = 0.3 * Math.pow(NdotL, 32);
+                                const shade = ambient + diffuse + specular;
                                 
-                                const baseColor = colorFn(val);
-                                accColor = {
-                                    r: baseColor.r * lightIntensity,
-                                    g: baseColor.g * lightIntensity,
-                                    b: baseColor.b * lightIntensity
-                                };
-                                accAlpha = 1;
-                                break;
-                            }
-                        } else if (renderMode === 'composite') {
-                            // DVR (Direct Volume Rendering) with transfer function
-                            const alphaVal = val > threshold * 0.5 ? (val / 255) * opacity * 0.1 : 0;
-                            if (alphaVal > 0.001) {
                                 const color = colorFn(val);
-                                // Front-to-back compositing
-                                accColor.r += (1 - accAlpha) * alphaVal * color.r;
-                                accColor.g += (1 - accAlpha) * alphaVal * color.g;
-                                accColor.b += (1 - accAlpha) * alphaVal * color.b;
-                                accAlpha += (1 - accAlpha) * alphaVal;
+                                accR = color.r * shade;
+                                accG = color.g * shade;
+                                accB = color.b * shade;
+                                accAlpha = 1;
                             }
+                        }
+                    }
+                    else if (renderMode === 'composite') {
+                        // Direct volume rendering with transfer function
+                        const normalized = (val - minIntensity) / (255 - minIntensity);
+                        
+                        // Opacity transfer function
+                        let alpha = 0;
+                        if (normalized > 0.1) {
+                            alpha = Math.pow(normalized, 2) * opacity * 0.08;
+                        }
+                        
+                        if (alpha > 0.001) {
+                            const color = colorFn(val);
+                            
+                            // Front-to-back compositing
+                            accR += (1 - accAlpha) * alpha * color.r;
+                            accG += (1 - accAlpha) * alpha * color.g;
+                            accB += (1 - accAlpha) * alpha * color.b;
+                            accAlpha += (1 - accAlpha) * alpha;
                         }
                     }
                 }
 
-                // Final color computation
-                let finalColor;
+                // Final color for this pixel
+                let finalR = 0, finalG = 0, finalB = 0;
+                
                 if (renderMode === 'mip') {
-                    const adjusted = Math.min(255, maxVal * brightnessMultiplier);
-                    finalColor = colorFn(adjusted);
-                } else if (renderMode === 'xray') {
-                    const avg = count > 0 ? (sumVal / count) * 0.5 : 0;
-                    const adjusted = Math.min(255, avg * brightnessMultiplier);
-                    finalColor = colorFn(adjusted);
-                } else if (renderMode === 'surface' || renderMode === 'composite') {
-                    finalColor = {
-                        r: Math.min(255, accColor.r * brightnessMultiplier),
-                        g: Math.min(255, accColor.g * brightnessMultiplier),
-                        b: Math.min(255, accColor.b * brightnessMultiplier)
-                    };
+                    if (maxVal > minIntensity) {
+                        const normalized = (maxVal - minIntensity) / (255 - minIntensity);
+                        const enhanced = Math.pow(normalized, 0.6) * 255;
+                        const color = colorFn(Math.min(255, enhanced * brightnessMultiplier));
+                        finalR = color.r;
+                        finalG = color.g;
+                        finalB = color.b;
+                    }
+                }
+                else if (renderMode === 'xray') {
+                    if (sampleCount > 0) {
+                        const avg = sumVal / sampleCount;
+                        const color = colorFn(Math.min(255, avg * brightnessMultiplier * 2));
+                        finalR = color.r;
+                        finalG = color.g;
+                        finalB = color.b;
+                    }
+                }
+                else if (renderMode === 'surface' || renderMode === 'composite') {
+                    finalR = Math.min(255, accR * brightnessMultiplier);
+                    finalG = Math.min(255, accG * brightnessMultiplier);
+                    finalB = Math.min(255, accB * brightnessMultiplier);
                 }
 
-                const pixelIdx = (py * width + px) * 4;
-                pixels[pixelIdx] = finalColor.r;
-                pixels[pixelIdx + 1] = finalColor.g;
-                pixels[pixelIdx + 2] = finalColor.b;
-                pixels[pixelIdx + 3] = 255;
+                const idx = (py * width + px) * 4;
+                pixels[idx] = finalR;
+                pixels[idx + 1] = finalG;
+                pixels[idx + 2] = finalB;
+                pixels[idx + 3] = 255;
             }
         }
 
         ctx.putImageData(imageData, 0, 0);
 
-        // Draw enhanced axis indicators
-        ctx.lineWidth = 2;
+        // Draw 3D axis indicator in corner
         const axisOrigin = { x: 60, y: height - 60 };
         const axisLen = 40;
         
-        // X axis (red)
-        ctx.strokeStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.moveTo(axisOrigin.x, axisOrigin.y);
-        ctx.lineTo(axisOrigin.x + axisLen * cosY, axisOrigin.y);
-        ctx.stroke();
-        ctx.fillStyle = '#ef4444';
-        ctx.font = 'bold 14px sans-serif';
-        ctx.fillText('X', axisOrigin.x + axisLen * cosY + 8, axisOrigin.y + 4);
-
-        // Y axis (green)
-        ctx.strokeStyle = '#22c55e';
-        ctx.beginPath();
-        ctx.moveTo(axisOrigin.x, axisOrigin.y);
-        ctx.lineTo(axisOrigin.x, axisOrigin.y - axisLen * cosX);
-        ctx.stroke();
-        ctx.fillStyle = '#22c55e';
-        ctx.fillText('Y', axisOrigin.x - 4, axisOrigin.y - axisLen * cosX - 8);
-
-        // Z axis (blue)
-        ctx.strokeStyle = '#3b82f6';
-        ctx.beginPath();
-        ctx.moveTo(axisOrigin.x, axisOrigin.y);
-        ctx.lineTo(axisOrigin.x + axisLen * sinY * 0.7, axisOrigin.y - axisLen * sinX * 0.7);
-        ctx.stroke();
-        ctx.fillStyle = '#3b82f6';
-        ctx.fillText('Z', axisOrigin.x + axisLen * sinY * 0.7 + 8, axisOrigin.y - axisLen * sinX * 0.7);
+        // Transform axis directions
+        const axes = [
+            { dir: [1, 0, 0], color: '#ef4444', label: 'X' },
+            { dir: [0, 1, 0], color: '#22c55e', label: 'Y' },
+            { dir: [0, 0, 1], color: '#3b82f6', label: 'Z' }
+        ];
+        
+        axes.forEach(axis => {
+            let [ax, ay, az] = axis.dir;
+            
+            // Rotate axis
+            let tempY = ay * cosRx - az * sinRx;
+            let tempZ = ay * sinRx + az * cosRx;
+            ay = tempY; az = tempZ;
+            
+            let tempX = ax * cosRy + az * sinRy;
+            tempZ = -ax * sinRy + az * cosRy;
+            ax = tempX; az = tempZ;
+            
+            // Project to 2D (ignore Z for axis indicator)
+            const endX = axisOrigin.x + ax * axisLen;
+            const endY = axisOrigin.y - ay * axisLen;
+            
+            ctx.strokeStyle = axis.color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(axisOrigin.x, axisOrigin.y);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+            
+            ctx.fillStyle = axis.color;
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText(axis.label, endX + 5, endY);
+        });
+        
+        // Display volume info
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.font = '11px monospace';
+        ctx.fillText(`Vol: ${cols}×${rows}×${depth}`, width - 100, 20);
+        ctx.fillText(`Spacing: ${spX.toFixed(1)}×${spY.toFixed(1)}×${spZ.toFixed(1)}`, width - 100, 35);
     };
 
     // Mouse interaction handlers
@@ -1609,16 +1717,26 @@ const VolumeRenderer3D = ({ caseId, volumeInfo }) => {
         setZoom(prev => Math.max(0.3, Math.min(4, prev - e.deltaY * 0.001)));
     };
 
-    // Preset views
+    // Preset views with anatomical labels
+    const presetViews = {
+        // Standard orthogonal views
+        anterior: { x: 0, y: 0, label: 'Anterior', icon: '👤', shortLabel: 'A' },
+        posterior: { x: 0, y: Math.PI, label: 'Posterior', icon: '🔙', shortLabel: 'P' },
+        left: { x: 0, y: -Math.PI / 2, label: 'Left Lateral', icon: '◀️', shortLabel: 'L' },
+        right: { x: 0, y: Math.PI / 2, label: 'Right Lateral', icon: '▶️', shortLabel: 'R' },
+        superior: { x: -Math.PI / 2, y: 0, label: 'Superior', icon: '⬆️', shortLabel: 'S' },
+        inferior: { x: Math.PI / 2, y: 0, label: 'Inferior', icon: '⬇️', shortLabel: 'I' },
+        // Oblique/diagonal views
+        anteriorRight: { x: -0.3, y: Math.PI / 4, label: 'Ant-Right', icon: '↗️', shortLabel: 'AR' },
+        anteriorLeft: { x: -0.3, y: -Math.PI / 4, label: 'Ant-Left', icon: '↖️', shortLabel: 'AL' },
+        posteriorRight: { x: -0.3, y: Math.PI * 3/4, label: 'Post-Right', icon: '↘️', shortLabel: 'PR' },
+        posteriorLeft: { x: -0.3, y: -Math.PI * 3/4, label: 'Post-Left', icon: '↙️', shortLabel: 'PL' },
+    };
+
     const setPresetView = (preset) => {
-        switch (preset) {
-            case 'front': setRotation({ x: 0, y: 0 }); break;
-            case 'back': setRotation({ x: 0, y: Math.PI }); break;
-            case 'left': setRotation({ x: 0, y: -Math.PI / 2 }); break;
-            case 'right': setRotation({ x: 0, y: Math.PI / 2 }); break;
-            case 'top': setRotation({ x: -Math.PI / 2, y: 0 }); break;
-            case 'bottom': setRotation({ x: Math.PI / 2, y: 0 }); break;
-            default: break;
+        const view = presetViews[preset];
+        if (view) {
+            setRotation({ x: view.x, y: view.y });
         }
     };
 
@@ -1706,6 +1824,15 @@ const VolumeRenderer3D = ({ caseId, volumeInfo }) => {
                 borderRadius: '10px',
                 border: '1px solid rgba(100, 116, 139, 0.2)'
             }}>
+                {/* Min Intensity - Filter dark background */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', fontSize: '12px' }}>
+                    <span style={{ color: '#ef4444', fontWeight: '500' }}>Min Cut:</span>
+                    <input type="range" min="0" max="100" value={minIntensity}
+                        onChange={(e) => setMinIntensity(parseInt(e.target.value))}
+                        style={{ width: '80px', accentColor: '#ef4444' }} />
+                    <span style={{ color: '#ef4444', minWidth: '30px' }}>{minIntensity}</span>
+                </label>
+
                 {(renderMode === 'surface' || renderMode === 'composite') && (
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', fontSize: '12px' }}>
                         <span style={{ color: '#f97316', fontWeight: '500' }}>Threshold:</span>
@@ -1713,6 +1840,16 @@ const VolumeRenderer3D = ({ caseId, volumeInfo }) => {
                             onChange={(e) => setThreshold(parseInt(e.target.value))}
                             style={{ width: '80px', accentColor: '#f97316' }} />
                         <span style={{ color: '#f97316', minWidth: '30px' }}>{threshold}</span>
+                    </label>
+                )}
+
+                {renderMode === 'surface' && (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', fontSize: '12px' }}>
+                        <span style={{ color: '#ec4899', fontWeight: '500' }}>Edge:</span>
+                        <input type="range" min="5" max="50" value={gradientThreshold}
+                            onChange={(e) => setGradientThreshold(parseInt(e.target.value))}
+                            style={{ width: '80px', accentColor: '#ec4899' }} />
+                        <span style={{ color: '#ec4899', minWidth: '30px' }}>{gradientThreshold}</span>
                     </label>
                 )}
 
@@ -1743,47 +1880,129 @@ const VolumeRenderer3D = ({ caseId, volumeInfo }) => {
                 </label>
             </div>
 
-            {/* Preset Views */}
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ color: '#94a3b8', fontSize: '12px', display: 'flex', alignItems: 'center', marginRight: '8px' }}>
-                    📐 Views:
-                </span>
-                {['front', 'back', 'left', 'right', 'top', 'bottom'].map(view => (
+            {/* Preset Views - Standard Anatomical Views */}
+            <div style={{ 
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                padding: '12px 16px',
+                borderRadius: '10px',
+                border: '1px solid rgba(100, 116, 139, 0.3)'
+            }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ 
+                        color: '#22d3ee', 
+                        fontSize: '12px', 
+                        fontWeight: '600',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginRight: '8px' 
+                    }}>
+                        📐 Standard Views:
+                    </span>
+                    {['anterior', 'posterior', 'left', 'right', 'superior', 'inferior'].map(view => (
+                        <button
+                            key={view}
+                            onClick={() => setPresetView(view)}
+                            title={presetViews[view].label}
+                            style={{
+                                padding: '6px 12px',
+                                backgroundColor: 'rgba(34, 211, 238, 0.1)',
+                                color: '#22d3ee',
+                                border: '1px solid rgba(34, 211, 238, 0.4)',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '11px',
+                                fontWeight: '500',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}
+                            onMouseOver={(e) => { 
+                                e.currentTarget.style.backgroundColor = 'rgba(34, 211, 238, 0.3)';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseOut={(e) => { 
+                                e.currentTarget.style.backgroundColor = 'rgba(34, 211, 238, 0.1)';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                            }}
+                        >
+                            <span>{presetViews[view].icon}</span>
+                            <span>{presetViews[view].shortLabel}</span>
+                        </button>
+                    ))}
+                </div>
+                
+                {/* Oblique Views */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginTop: '10px' }}>
+                    <span style={{ 
+                        color: '#a855f7', 
+                        fontSize: '12px', 
+                        fontWeight: '600',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginRight: '8px' 
+                    }}>
+                        🔄 Oblique Views:
+                    </span>
+                    {['anteriorRight', 'anteriorLeft', 'posteriorRight', 'posteriorLeft'].map(view => (
+                        <button
+                            key={view}
+                            onClick={() => setPresetView(view)}
+                            title={presetViews[view].label}
+                            style={{
+                                padding: '6px 12px',
+                                backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                                color: '#a855f7',
+                                border: '1px solid rgba(168, 85, 247, 0.4)',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '11px',
+                                fontWeight: '500',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}
+                            onMouseOver={(e) => { 
+                                e.currentTarget.style.backgroundColor = 'rgba(168, 85, 247, 0.3)';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseOut={(e) => { 
+                                e.currentTarget.style.backgroundColor = 'rgba(168, 85, 247, 0.1)';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                            }}
+                        >
+                            <span>{presetViews[view].icon}</span>
+                            <span>{presetViews[view].shortLabel}</span>
+                        </button>
+                    ))}
+                    
+                    {/* Reset Button */}
                     <button
-                        key={view}
-                        onClick={() => setPresetView(view)}
+                        onClick={() => { setRotation({ x: -0.3, y: 0.5 }); setZoom(1.2); }}
+                        title="Reset to default view"
                         style={{
-                            padding: '4px 10px',
-                            backgroundColor: 'rgba(71, 85, 105, 0.4)',
-                            color: '#cbd5e1',
-                            border: '1px solid #475569',
-                            borderRadius: '4px',
+                            padding: '6px 14px',
+                            backgroundColor: '#475569',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '11px',
-                            textTransform: 'capitalize',
+                            fontWeight: '600',
+                            marginLeft: 'auto',
                             transition: 'all 0.2s'
                         }}
-                        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#475569'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'rgba(71, 85, 105, 0.4)'; }}
+                        onMouseOver={(e) => { 
+                            e.currentTarget.style.backgroundColor = '#64748b';
+                        }}
+                        onMouseOut={(e) => { 
+                            e.currentTarget.style.backgroundColor = '#475569';
+                        }}
                     >
-                        {view}
+                        ↺ Reset View
                     </button>
-                ))}
-                <button
-                    onClick={() => { setRotation({ x: -0.3, y: 0.5 }); setZoom(1.2); }}
-                    style={{
-                        padding: '4px 10px',
-                        backgroundColor: '#475569',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '11px',
-                        marginLeft: 'auto'
-                    }}
-                >
-                    ↺ Reset
-                </button>
+                </div>
             </div>
 
             {/* Canvas */}
