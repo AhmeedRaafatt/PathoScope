@@ -86,6 +86,9 @@
   width: calc(100% - 24px);
   font-size: 14px;
   font-weight: 500;
+  
+  /* Added: Invisible border to prevent text jumping on hover/active */
+  border-left: 4px solid transparent;
 }
 
 .nav-link:hover {
@@ -94,13 +97,18 @@
 }
 
 .nav-link.active {
-  background-color: #5B65DC;
-  color: white;
+  /* Changed: Lighter background so the line stands out */
+  background-color: #EEeffc; 
+  color: #5B65DC;
   font-weight: 600;
+  
+  /* Added: The Purple Selection Line */
+  border-left: 4px solid #5B65DC; 
 }
 
 .nav-link.active svg {
-  color: white;
+  /* Changed: Icon matches text color instead of white */
+  color: #5B65DC; 
 }
 
 .nav-link svg {
@@ -113,10 +121,6 @@
 
 .nav-link:hover svg {
   color: #5B65DC;
-}
-
-.nav-link.active svg {
-  color: white;
 }
 
 /* Logout Button */
@@ -319,6 +323,10 @@
     margin-bottom: 0;
     margin-right: 4px;
     white-space: nowrap;
+    
+    /* On mobile, usually a bottom border looks better than left, 
+       but keeping left border as requested. 
+       If you want bottom border on mobile, change border-left to border-bottom here. */
   }
 
   .sidebar-footer {
