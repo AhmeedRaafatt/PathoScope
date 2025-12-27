@@ -1,0 +1,320 @@
+/* =========================================
+   ADMIN LAYOUT - Hematology Style Design
+   ========================================= */
+
+.admin-layout {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+}
+
+/* ===== SIDEBAR STYLES (Hematology Design) ===== */
+.admin-sidebar {
+  width: 250px;
+  background-color: #eeeef9;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow-y: auto;
+  border-right: 1px solid #e5e7eb;
+  z-index: 100;
+  border-radius: 4px;
+  min-height: 100vh;
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  padding: 20px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-header span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #122056;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-header .sidebar-logo {
+  width: 130px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* ===== MAIN CONTENT WRAPPER (FLEXBOX COLUMN) ===== */
+.admin-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  background-color: #FAFAFD;
+}
+
+/* ===== HEADER STYLES (COMPACT, AT TOP) ===== */
+.admin-header {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.01);
+  min-height: 48px;
+  flex-shrink: 0;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-header h1 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #122056;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.admin-indicator svg {
+  font-size: 14px;
+  color: #5B65DC;
+}
+
+/* ===== NAVIGATION ===== */
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 12px 8px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: #2d3748;
+  background-color: transparent;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  background-color: #f3f4f6;
+  color: #2d3748;
+}
+
+/* Active state - no background, just purple text */
+.nav-link.active {
+  background-color: transparent;
+  color: #5B65DC !important;
+  font-weight: 600;
+}
+
+.nav-link.active span {
+  color: #5B65DC !important;
+}
+
+.nav-link.active svg {
+  color: #5B65DC !important;
+}
+
+.nav-link svg {
+  font-size: 18px;
+  min-width: 18px;
+  color: #5B65DC;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover svg {
+  color: #5B65DC;
+}
+
+/* ===== LOGOUT BUTTON ===== */
+.sidebar-footer {
+  padding: 16px 8px;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin: 0;
+  border-radius: 6px;
+  background-color: transparent;
+  border: 1px solid #e5e7eb;
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: calc(100% - 24px);
+  text-decoration: none;
+}
+
+.logout-btn:hover {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.logout-btn svg {
+  color: #ef4444;
+  flex-shrink: 0;
+  min-width: 18px;
+}
+
+.logout-btn:hover svg {
+  color: #dc2626;
+}
+
+.logout-btn span {
+  text-align: left;
+  flex: 1;
+}
+
+/* ===== BROADCAST BANNER ===== */
+.broadcast-banner {
+  background: linear-gradient(90deg, #fef3c7 0%, #fef3c7 100%);
+  border: 1px solid #fbbf24;
+  border-left: 4px solid #d97706;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.broadcast-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.broadcast-icon {
+  color: #d97706;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.broadcast-message {
+  font-weight: 500;
+  color: #92400e;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.dismiss-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #d97706;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dismiss-btn:hover {
+  background: rgba(217, 119, 6, 0.15);
+  transform: scale(1.1);
+}
+
+.dismiss-btn:focus-visible {
+  outline: 2px solid #d97706;
+  background: rgba(217, 119, 6, 0.2);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    width: 220px;
+  }
+  
+  .sidebar-header .sidebar-logo {
+    width: 110px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .sidebar-header {
+    padding: 16px 12px;
+  }
+
+  .sidebar-header .sidebar-logo {
+    width: 100px;
+  }
+
+  .admin-header {
+    padding: 10px 16px;
+    min-height: 48px;
+  }
+
+  .admin-header h1 {
+    font-size: 14px;
+  }
+
+  .admin-indicator {
+    font-size: 11px;
+  }
+}

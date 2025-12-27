@@ -1,53 +1,94 @@
-import { useState } from 'react'
-import { createBrowserRouter , 
-  createRoutesFromElements , 
-  Route , RouterProvider
- } from 'react-router-dom'
+import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
+
+// Public Pages
 import LandingPage from "./pages/public/LandingPage"
-import LoginPage , {action as loginAction} from "./pages/public/LoginPage"
-import RegisterPage ,{action as registerAction}from "./pages/public/RegisterPage"
+import LoginPage, { action as loginAction } from "./pages/public/LoginPage"
+import RegisterPage, { action as registerAction } from "./pages/public/RegisterPage"
 import Layout from './components/Layout'
-import PatientLayout ,{loader as layoutLoader}from './pages/patient/patientLayout'
+
+// Patient Portal
+import PatientLayout, { loader as patientLoader } from './pages/patient/patientLayout'
 import PatientDashboard from './pages/patient/PatientDashboard'
 import PatientProfile from './pages/patient/PatientProfile'
 import PatientAppoinmentsLayout from './pages/patient/PatientAppoinmentsLayout'
 import ViewAppointments from './pages/patient/ViewAppointments'
-import BookAppointment  , {action as BookAppointmentAction} from './pages/patient/BookAppointment'
+import BookAppointment, { action as BookAppointmentAction } from './pages/patient/BookAppointment'
 import PatientResultsLayout from './pages/patient/PatientResultsLayout'
 import ViewResults from './pages/patient/ViewResults'
 import ResultsHematology from './pages/patient/ResultsHematology'
 import ResultsPathology from './pages/patient/ResultsPathology'
 import PatientBillingsLayout from './pages/patient/PatientBillingsLayout'
 import ViewInvoices from './pages/patient/ViewInvoices'
+
+// Hematology Module
+import HematologyLayout, { loader as hematologyLoader } from './pages/hematology/HematologyLayout'
+import HematologyDashboard from './pages/hematology/HematologyDashboard'
+import ScheduledPatients, { action as accessionAction } from './pages/hematology/ScheduledPatients'
+import SamplesDashboard, { action as queueAction } from './pages/hematology/SamplesDashboard'
+import QueueManagement, { action as completeAction } from './pages/hematology/QueueManagement'
+import ValidationResults from './pages/hematology/ValidationResults'
+
+// Admin Dashboard
+import AdminLayout from './components/admin/AdminLayout'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import UserManagement from './pages/admin/UserManagement'
+import LabConfiguration from './pages/admin/LabConfiguration'
+import AuditLogs from './pages/admin/AuditLogs'
+import SystemBroadcasts from './pages/admin/SystemBroadcasts'
+
 import './styles/global.css'
 
-
 const router = createBrowserRouter(createRoutesFromElements(
-    <Route path="/" element={<Layout/>}>
-      <Route index element={<LandingPage/>} />
-      <Route path="login" element={<LoginPage />} action={loginAction}/>
-      <Route path="register" element={<RegisterPage />} action={registerAction}/>
-      <Route path="patient" element={<PatientLayout/>} loader={layoutLoader}>
-        <Route index element={<PatientDashboard/>}/>
-        <Route path="profile" element={<PatientProfile/>}/>
-        <Route path="appointments" element={<PatientAppoinmentsLayout/>}>
-         <Route index element={<ViewAppointments/>}/>
-         <Route path="book" element={<BookAppointment/>} action ={BookAppointmentAction}/>
+  <>
+    {/* Routes WITH Footer */}
+    <Route element={<Layout />}>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="login" element={<LoginPage />} action={loginAction} />
+      <Route path="register" element={<RegisterPage />} action={registerAction} />
+      
+      {/* Patient Portal */}
+      <Route path="patient" element={<PatientLayout />} loader={patientLoader}>
+        <Route index element={<PatientDashboard />} />
+        <Route path="profile" element={<PatientProfile />} />
+        <Route path="appointments" element={<PatientAppoinmentsLayout />}>
+          <Route index element={<ViewAppointments />} />
+          <Route path="book" element={<BookAppointment />} action={BookAppointmentAction} />
         </Route>
-        <Route path="results" element={<PatientResultsLayout/>}>
-         <Route index element={<ViewResults/>}/>
-         <Route path="hematology" element={<ResultsHematology/>}/>
-         <Route path="pathology" element={<ResultsPathology/>}/>
+        <Route path="results" element={<PatientResultsLayout />}>
+          <Route index element={<ViewResults />} />
+          <Route path="hematology" element={<ResultsHematology />} />
+          <Route path="pathology" element={<ResultsPathology />} />
         </Route>
-        <Route path ="billings" element={<PatientBillingsLayout/>}>
-         <Route index element={<ViewInvoices/>} />
+        <Route path="billings" element={<PatientBillingsLayout />}>
+          <Route index element={<ViewInvoices />} />
         </Route>
       </Route>
+
+      {/* Hematology Module */}
+      <Route path="hematology" element={<HematologyLayout />} loader={hematologyLoader}>
+        <Route index element={<HematologyDashboard />} />
+        <Route path="scheduled" element={<ScheduledPatients />} action={accessionAction} />
+        <Route path="accession" element={<ScheduledPatients />} action={accessionAction} />
+        <Route path="samples" element={<SamplesDashboard />} action={queueAction} />
+        <Route path="queue" element={<QueueManagement />} action={completeAction} />
+        <Route path="validation" element={<ValidationResults />} />
+        <Route path="results" element={<ValidationResults/>} action={queueAction} />
+      </Route>
     </Route>
+
+    {/* Routes WITHOUT Footer - Admin Portal */}
+    <Route path="/admin" element={<AdminLayout />}>
+      <Route index element={<AdminDashboard />} />
+      <Route path="users" element={<UserManagement />} />
+      <Route path="config" element={<LabConfiguration />} />
+      <Route path="audit" element={<AuditLogs />} />
+      <Route path="broadcasts" element={<SystemBroadcasts />} />
+    </Route>
+  </>
 ))
 
 function App() {
-  return (<RouterProvider router={router}/>)
+    return <RouterProvider router={router} />
 }
 
 export default App

@@ -277,7 +277,7 @@ export default function PatientDashboard() {
                     <p className="empty-message ">
                         You don't have any recent activity. Book an appointment to get started!
                     </p>
-                    <Link to="/patient/appointments/book" className="btn-primary">
+                    <Link to="/patient/appointments/book" className="btn-primary bookbtn">
                         Book Appointment
                     </Link>
                 </section>

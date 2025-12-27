@@ -357,7 +357,13 @@
 /* ============================================
    EMPTY STATE
    ============================================ */
-
+.dashboard-section.empty-state{
+    flex-direction: column;
+    display: flex;
+    text-align: center;
+    padding: 48px 24px;
+    gap:10px;
+}
 .empty-state {
     text-align: center;
     padding: 48px 24px;
@@ -367,6 +373,10 @@
     color: #6b7280;
     margin: 0 0 24px 0;
     margin-bottom: 10px;
+}
+a.btn-primary.bookbtn{
+    align-self: center;
+    width:200px;
 }
 /* ============================================
    RESPONSIVE DESIGN
