@@ -22,12 +22,15 @@ export async function action({ request }) {
       // 1. Store Credentials
       localStorage.setItem('token', data.token);
       localStorage.setItem('username', data.username);
-      localStorage.setItem('role', data.role);
+      localStorage.setItem('userRole', data.role);
       console.log("Login successful:", data);
 
       // 2. Traffic Cop Logic (Corrected)
       if (data.role === 'patient') {
         return redirect('/patient');
+      } else if (data.role === 'admin'){
+        return redirect('/admin');
+      } else if (data.role === 'lab_tech' || data.role === 'pathologist' || data.role === 'admin') {
       }
       else if (data.role === 'lab_tech' || data.role === 'admin') {
         return redirect('/hematology');

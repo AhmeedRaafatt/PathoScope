@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/hematology/', include('hematology.urls')),
     # --- ADD THIS LINE ---
     path('api/pathology/', include('pathology.urls')),
+    path('api/admin/', include('admin_dashboard.urls')),
 ]
 
 # --- 3. ADD THIS BLOCK AT THE END ---
