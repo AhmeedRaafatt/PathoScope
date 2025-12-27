@@ -16,6 +16,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import RevenueChart from "../../components/admin/RevenueChart";
 import "../../styles/admin/Dashboard.css";
+import { getToken } from "../../utls";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -27,7 +28,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getToken();
         const response = await fetch("http://127.0.0.1:8000/api/admin/stats/", {
           headers: {
             Authorization: `Token ${token}`,
@@ -59,7 +60,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchActiveBroadcast = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getToken();
         const response = await fetch(
           "http://127.0.0.1:8000/api/admin/broadcasts/active/",
           {

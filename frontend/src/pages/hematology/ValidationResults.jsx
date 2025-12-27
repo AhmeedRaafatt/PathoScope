@@ -11,6 +11,7 @@ import {
     faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/hematology/Validation.css';
+import { getToken } from '../../utls';
 
 export default function ValidationResults() {
     const context = useOutletContext();
@@ -39,7 +40,7 @@ export default function ValidationResults() {
         setSampleResults([]); // Clear previous results
         
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             if (!token) {
                 throw new Error('Authentication required');
             }
@@ -94,7 +95,7 @@ export default function ValidationResults() {
         setError(null);
         
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const response = await fetch(
                 `http://127.0.0.1:8000/api/hematology/samples/${selectedSample.id}/validate/`,
                 {

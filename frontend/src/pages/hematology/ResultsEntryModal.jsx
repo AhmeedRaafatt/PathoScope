@@ -8,6 +8,7 @@ import {
     faFlask,
     faSpinner
 } from '@fortawesome/free-solid-svg-icons';
+import { getToken } from '../../utls';
 
 export default function ResultsEntryModal({ sample, analytes, onClose, onSuccess }) {
     const [results, setResults] = useState({});
@@ -60,7 +61,7 @@ export default function ResultsEntryModal({ sample, analytes, onClose, onSuccess
                 throw new Error('Please fill in all fields');
             }
 
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const formattedResults = Object.entries(results)
                 .map(([analyteId, value]) => ({
                     analyte_id: parseInt(analyteId),

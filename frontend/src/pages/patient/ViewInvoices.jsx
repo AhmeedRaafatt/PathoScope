@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { FileText, CreditCard, X, CheckCircle, Clock, DollarSign } from 'lucide-react';
 import '../../styles/patient/Billings.css';
+import { getToken } from '../../utls';
 
 const ViewInvoices = () => {
   const context = useOutletContext();
@@ -62,7 +63,7 @@ const ViewInvoices = () => {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getToken();
       const res = await fetch(`http://127.0.0.1:8000/api/patient-portal/invoices/${selectedInvoice.id}/pay/`, {
         method: 'POST',
         headers: {

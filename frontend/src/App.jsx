@@ -7,7 +7,7 @@ import RegisterPage, { action as registerAction } from "./pages/public/RegisterP
 import Layout from './components/Layout'
 
 // Patient Portal
-import PatientLayout, { loader as patientLoader } from './pages/patient/patientLayout'
+import PatientLayout, { loader as patientLoader } from './pages/patient/PatientLayout'
 import PatientDashboard from './pages/patient/PatientDashboard'
 import PatientProfile from './pages/patient/PatientProfile'
 import PatientAppoinmentsLayout from './pages/patient/PatientAppoinmentsLayout'
@@ -17,6 +17,7 @@ import PatientResultsLayout from './pages/patient/PatientResultsLayout'
 import ViewResults from './pages/patient/ViewResults'
 import ResultsHematology from './pages/patient/ResultsHematology'
 import ResultsPathology from './pages/patient/ResultsPathology'
+import PatientPathologyReport from './pages/patient/PatientPathologyReport'
 import PatientBillingsLayout from './pages/patient/PatientBillingsLayout'
 import ViewInvoices from './pages/patient/ViewInvoices'
 
@@ -27,6 +28,7 @@ import ScheduledPatients, { action as accessionAction } from './pages/hematology
 import SamplesDashboard, { action as queueAction } from './pages/hematology/SamplesDashboard'
 import QueueManagement, { action as completeAction } from './pages/hematology/QueueManagement'
 import ValidationResults from './pages/hematology/ValidationResults'
+import UploadSlides, { action as uploadAction } from './pages/hematology/UploadSlides'
 
 // Admin Dashboard
 import AdminLayout from './components/admin/AdminLayout'
@@ -35,10 +37,9 @@ import UserManagement from './pages/admin/UserManagement'
 import LabConfiguration from './pages/admin/LabConfiguration'
 import AuditLogs from './pages/admin/AuditLogs'
 import SystemBroadcasts from './pages/admin/SystemBroadcasts'
-import UploadSlides, { action as uploadAction } from './pages/hematology/UploadSlides'
 
 // Pathology Module (Pathologist Only)
-import PathologyLayout , {loader as pathologyLoader} from './pages/pathology/pathologyLayout'
+import PathologyLayout, { loader as pathologyLoader } from './pages/pathology/PathologyLayout'
 import PathologyDashboard from './pages/pathology/PathologyDashboard'
 import PathologyQueue from './pages/pathology/PathologyQueue'
 import AllCases from './pages/pathology/AllCases'
@@ -50,11 +51,12 @@ import './styles/global.css'
 const router = createBrowserRouter(createRoutesFromElements(
   <>
     {/* Routes WITH Footer */}
-    <Route element={<Layout />}>
-      <Route path="/" element={<LandingPage />} />
+    <Route path="/" element={<Layout />}>
+      {/* Public Routes */}
+      <Route index element={<LandingPage />} />
       <Route path="login" element={<LoginPage />} action={loginAction} />
       <Route path="register" element={<RegisterPage />} action={registerAction} />
-      
+
       {/* Patient Portal */}
       <Route path="patient" element={<PatientLayout />} loader={patientLoader}>
         <Route index element={<PatientDashboard />} />
@@ -67,36 +69,14 @@ const router = createBrowserRouter(createRoutesFromElements(
           <Route index element={<ViewResults />} />
           <Route path="hematology" element={<ResultsHematology />} />
           <Route path="pathology" element={<ResultsPathology />} />
+          <Route path="pathology/report/:caseId" element={<PatientPathologyReport />} />
         </Route>
         <Route path="billings" element={<PatientBillingsLayout />}>
           <Route index element={<ViewInvoices />} />
         </Route>
       </Route>
-    <Route path="/" element={<Layout />}>
-        {/* Public Routes */}
-        <Route index element={<LandingPage />} />
-        <Route path="login" element={<LoginPage />} action={loginAction} />
-        <Route path="register" element={<RegisterPage />} action={registerAction} />
 
-        {/* Patient Portal */}
-        <Route path="patient" element={<PatientLayout />} loader={patientLoader}>
-            <Route index element={<PatientDashboard />} />
-            <Route path="profile" element={<PatientProfile />} />
-            <Route path="appointments" element={<PatientAppoinmentsLayout />}>
-                <Route index element={<ViewAppointments />} />
-                <Route path="book" element={<BookAppointment />} action={BookAppointmentAction} />
-            </Route>
-            <Route path="results" element={<PatientResultsLayout />}>
-                <Route index element={<ViewResults />} />
-                <Route path="hematology" element={<ResultsHematology />} />
-                <Route path="pathology" element={<ResultsPathology />} />
-            </Route>
-            <Route path="billings" element={<PatientBillingsLayout />}>
-                <Route index element={<ViewInvoices />} />
-            </Route>
-        </Route>
-
-      {/* Hematology Module */}
+      {/* Hematology Module (Lab Tech) */}
       <Route path="hematology" element={<HematologyLayout />} loader={hematologyLoader}>
         <Route index element={<HematologyDashboard />} />
         <Route path="scheduled" element={<ScheduledPatients />} action={accessionAction} />
@@ -104,26 +84,18 @@ const router = createBrowserRouter(createRoutesFromElements(
         <Route path="samples" element={<SamplesDashboard />} action={queueAction} />
         <Route path="queue" element={<QueueManagement />} action={completeAction} />
         <Route path="validation" element={<ValidationResults />} />
-        <Route path="results" element={<ValidationResults/>} action={queueAction} />
+        <Route path="results" element={<ValidationResults />} action={queueAction} />
+        <Route path="upload" element={<UploadSlides />} action={uploadAction} />
       </Route>
-        {/* Hematology Module (Lab Tech - Handles Both Types) */}
-        <Route path="hematology" element={<HematologyLayout />} loader={hematologyLoader}>
-            <Route index element={<HematologyDashboard />} />
-            <Route path="scheduled" element={<ScheduledPatients />} action={accessionAction} />
-            <Route path="samples" element={<SamplesDashboard />} action={queueAction} />
-            <Route path="queue" element={<QueueManagement />} action={completeAction} />
-            <Route path="validation" element={<ValidationResults />} />
-            <Route path="upload" element={<UploadSlides />} action={uploadAction} />
-        </Route>
 
-        {/* Pathology Module (Pathologist Only) */}
-        <Route path="pathology" element={<PathologyLayout />} loader={pathologyLoader}>
-            <Route index element={<PathologyDashboard />} />
-            <Route path="queue" element={<PathologyQueue />} />
-            <Route path="cases" element={<AllCases />} />
-            <Route path="viewer/:id" element={<ViewerPage />} />
-            <Route path="report/:id" element={<PathologyReport />} />
-        </Route>
+      {/* Pathology Module (Pathologist Only) */}
+      <Route path="pathology" element={<PathologyLayout />} loader={pathologyLoader}>
+        <Route index element={<PathologyDashboard />} />
+        <Route path="queue" element={<PathologyQueue />} />
+        <Route path="cases" element={<AllCases />} />
+        <Route path="viewer/:id" element={<ViewerPage />} />
+        <Route path="report/:id" element={<PathologyReport />} />
+      </Route>
     </Route>
 
     {/* Routes WITHOUT Footer - Admin Portal */}
@@ -138,7 +110,7 @@ const router = createBrowserRouter(createRoutesFromElements(
 ))
 
 function App() {
-    return <RouterProvider router={router} />
+  return <RouterProvider router={router} />
 }
 
 export default App

@@ -4,6 +4,7 @@ import DashBoardCard from '../../components/patient/DashBoardCard';
 import { faCalendarCheck, faFileAlt, faDollarSign, faVial, faChevronRight, faDownload, faClock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '../../styles/patient/Dashboard.css';
+import { getToken, getUsername } from '../../utls';
 
 export default function PatientDashboard() {
     const context = useOutletContext();
@@ -12,10 +13,13 @@ export default function PatientDashboard() {
     const appointments = Array.isArray(context?.appointments) ? context.appointments : [];
     const testOrders = Array.isArray(context?.testOrders) ? context.testOrders : [];
     const invoices = Array.isArray(context?.invoices) ? context.invoices : [];
+    
+    // Get username from profile data (more reliable than sessionStorage)
+    const username = context?.profile?.username || getUsername() || 'Guest';
 
     const [displayedText, setDisplayedText] = useState('');
     const [displayedSubtext, setDisplayedSubtext] = useState('');
-    const fullText = `Welcome back ${localStorage.getItem('username') || 'Guest'} ! 👋`;
+    const fullText = `Welcome back ${username} ! 👋`;
     const fullSubtext = "here is your health overview";
 
     // Typewriter effect for main text
@@ -74,7 +78,7 @@ export default function PatientDashboard() {
     // Payment handler with data refresh
     const handlePayment = async (invoiceId) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const response = await fetch(`http://127.0.0.1:8000/api/patient-portal/invoices/${invoiceId}/pay/`, {
                 method: 'POST',
                 headers: {

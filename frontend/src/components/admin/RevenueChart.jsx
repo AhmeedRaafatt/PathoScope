@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js/auto";
 import { Bar } from "react-chartjs-2";
+import { getToken } from "../../utls";
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -13,7 +22,7 @@ export default function RevenueChart() {
   useEffect(() => {
     const fetchRevenueTrend = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getToken();
         const response = await fetch(
           "http://127.0.0.1:8000/api/admin/revenue-trend/",
           {

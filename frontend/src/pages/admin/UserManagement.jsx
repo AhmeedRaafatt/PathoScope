@@ -15,6 +15,7 @@ import {
   faVial,
 } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/admin/UserManagement.css";
+import { getToken } from "../../utls";
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -26,8 +27,9 @@ export default function UserManagement() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackType, setFeedbackType] = useState("success"); // 'success' or 'error'
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const USER_ROLES = [
     { value: "patient", label: "Patient", icon: faUsers },
@@ -43,7 +45,7 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const params = new URLSearchParams();
 
       if (searchTerm) params.append("search", searchTerm);
@@ -72,17 +74,18 @@ export default function UserManagement() {
     }
   };
 
-  const showSuccess = (message) => {
-    setSuccessMessage(message);
-    setShowSuccessModal(true);
+  const showFeedback = (message, type = "success") => {
+    setFeedbackMessage(message);
+    setFeedbackType(type);
+    setShowFeedbackModal(true);
     setTimeout(() => {
-      setShowSuccessModal(false);
+      setShowFeedbackModal(false);
     }, 3000);
   };
 
   const handleCreateUser = async (userData) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const response = await fetch("http://127.0.0.1:8000/api/admin/users/", {
         method: "POST",
         headers: {
@@ -95,19 +98,19 @@ export default function UserManagement() {
       if (response.ok) {
         await fetchUsers();
         setShowCreateModal(false);
-        showSuccess("User created successfully!");
+        showFeedback("User created successfully!", "success");
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to create user");
+        throw new Error(errorData.detail || errorData.username?.[0] || errorData.email?.[0] || "Failed to create user");
       }
     } catch (err) {
-      showSuccess(`Error: ${err.message}`);
+      showFeedback(err.message, "error");
     }
   };
 
   const handleUpdateUser = async (userData) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       
       // For edit: only send password if it's not empty
       const updateData = {
@@ -138,13 +141,13 @@ export default function UserManagement() {
         await fetchUsers();
         setShowEditModal(false);
         setSelectedUser(null);
-        showSuccess("User updated successfully!");
+        showFeedback("User updated successfully!", "success");
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to update user");
+        throw new Error(errorData.detail || errorData.username?.[0] || errorData.email?.[0] || "Failed to update user");
       }
     } catch (err) {
-      showSuccess(`Error: ${err.message}`);
+      showFeedback(err.message, "error");
     }
   };
 
@@ -152,7 +155,7 @@ export default function UserManagement() {
     if (!selectedUser) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const response = await fetch(
         `http://127.0.0.1:8000/api/admin/users/${selectedUser.id}/`,
         {
@@ -168,12 +171,12 @@ export default function UserManagement() {
         await fetchUsers();
         setShowDeleteModal(false);
         setSelectedUser(null);
-        showSuccess("User deleted successfully!");
+        showFeedback("User deleted successfully!", "success");
       } else {
         throw new Error("Failed to delete user");
       }
     } catch (err) {
-      showSuccess(`Error: ${err.message}`);
+      showFeedback(err.message, "error");
     }
   };
 
@@ -409,10 +412,11 @@ export default function UserManagement() {
         </div>
       )}
 
-      {showSuccessModal && (
-        <SuccessModal
-          message={successMessage}
-          onClose={() => setShowSuccessModal(false)}
+      {showFeedbackModal && (
+        <FeedbackModal
+          message={feedbackMessage}
+          type={feedbackType}
+          onClose={() => setShowFeedbackModal(false)}
         />
       )}
     </main>
@@ -573,21 +577,22 @@ function UserModal({ title, user, onSubmit, onClose, roles }) {
   );
 }
 
-function SuccessModal({ message, onClose }) {
+function FeedbackModal({ message, type, onClose }) {
+  const isSuccess = type === "success";
   return (
     <div className="modal-overlay">
-      <div className="modal success-modal">
+      <div className={`modal ${isSuccess ? 'success-modal' : 'error-modal'}`}>
         <div className="modal-header">
-          <h2>Success</h2>
+          <h2>{isSuccess ? 'Success' : 'Error'}</h2>
           <button className="modal-close" onClick={onClose}>
             <FontAwesomeIcon icon={faTimes} />
           </button>
         </div>
         <div className="modal-body">
-          <div className="success-icon">
-            <FontAwesomeIcon icon={faCheck} />
+          <div className={isSuccess ? 'success-icon' : 'error-icon'}>
+            <FontAwesomeIcon icon={isSuccess ? faCheck : faExclamationTriangle} />
           </div>
-          <p className="success-message">{message}</p>
+          <p className={isSuccess ? 'success-message' : 'error-message'}>{message}</p>
         </div>
         <div className="modal-footer">
           <button className="btn-primary" onClick={onClose}>

@@ -16,6 +16,7 @@ import {
   faCheckCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/admin/SystemBroadcasts.css";
+import { getToken } from "../../utls";
 
 export default function SystemBroadcasts() {
   const [broadcasts, setBroadcasts] = useState([]);
@@ -40,7 +41,7 @@ export default function SystemBroadcasts() {
   const fetchBroadcasts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const params = new URLSearchParams();
 
       if (activeTab === "active") {
@@ -87,7 +88,7 @@ export default function SystemBroadcasts() {
 
   const handleCreateBroadcast = async (broadcastData) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const response = await fetch(
         "http://127.0.0.1:8000/api/admin/broadcasts/",
         {
@@ -114,7 +115,7 @@ export default function SystemBroadcasts() {
 
   const handleUpdateBroadcast = async (broadcastData) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const response = await fetch(
         `http://127.0.0.1:8000/api/admin/broadcasts/${selectedBroadcast.id}/`,
         {
@@ -142,7 +143,7 @@ export default function SystemBroadcasts() {
 
   const handleToggleStatus = async (broadcast) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const response = await fetch(
         `http://127.0.0.1:8000/api/admin/broadcasts/${broadcast.id}/`,
         {
@@ -174,7 +175,7 @@ export default function SystemBroadcasts() {
     if (!selectedBroadcast) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const response = await fetch(
         `http://127.0.0.1:8000/api/admin/broadcasts/${selectedBroadcast.id}/`,
         {

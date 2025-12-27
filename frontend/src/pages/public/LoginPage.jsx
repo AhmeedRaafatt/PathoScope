@@ -1,4 +1,5 @@
 import { Form, Link, redirect, useActionData } from "react-router-dom"
+import { setAuthData } from "../../utls"
 import '../../styles/Login.css'
 import logo from "../../assets/logo.png"
 
@@ -19,26 +20,20 @@ export async function action({ request }) {
     const data = await response.json();
 
     if (response.ok) {
-      // 1. Store Credentials
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('username', data.username);
-      localStorage.setItem('userRole', data.role);
+      // 1. Store Credentials in sessionStorage (unique per tab)
+      setAuthData(data.token, data.username, data.role);
       console.log("Login successful:", data);
 
-      // 2. Traffic Cop Logic (Corrected)
+      // 2. Traffic Cop Logic - Redirect based on role
       if (data.role === 'patient') {
         return redirect('/patient');
-      } else if (data.role === 'admin'){
+      } else if (data.role === 'admin') {
         return redirect('/admin');
-      } else if (data.role === 'lab_tech' || data.role === 'pathologist' || data.role === 'admin') {
-      }
-      else if (data.role === 'lab_tech' || data.role === 'admin') {
+      } else if (data.role === 'lab_tech') {
         return redirect('/hematology');
-      }
-      else if (data.role === 'pathologist') {
+      } else if (data.role === 'pathologist') {
         return redirect('/pathology');
-      }
-      else {
+      } else {
         // Fallback for unknown roles
         return redirect('/');
       }

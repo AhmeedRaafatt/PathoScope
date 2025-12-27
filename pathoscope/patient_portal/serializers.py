@@ -55,12 +55,13 @@ class TestOrderSerializer(serializers.ModelSerializer):
     pathologist_name = serializers.SerializerMethodField()
     finalized_date = serializers.SerializerMethodField()
     image_preview = serializers.SerializerMethodField()
+    report_pdf_url = serializers.SerializerMethodField()
     
     class Meta:
         model = TestOrder
         fields = ['id', 'test_type', 'test_name', 'order_date', 'status', 'report_url', 'slide_url', 'price',
                   'pathology_case_id', 'icd_code', 'icd_description', 'accession_number', 
-                  'pathologist_name', 'finalized_date', 'image_preview']
+                  'pathologist_name', 'finalized_date', 'image_preview', 'report_pdf_url']
     
     def get_pathology_case_id(self, obj):
         if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case'):
@@ -95,6 +96,11 @@ class TestOrderSerializer(serializers.ModelSerializer):
     def get_image_preview(self, obj):
         if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case') and obj.pathology_case.image_preview:
             return obj.pathology_case.image_preview.url
+        return None
+
+    def get_report_pdf_url(self, obj):
+        if obj.test_type == 'pathology' and hasattr(obj, 'pathology_case') and obj.pathology_case.report_pdf:
+            return obj.pathology_case.report_pdf.url
         return None
 
 

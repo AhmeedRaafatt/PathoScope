@@ -10,10 +10,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import '../../styles/hematology/SamplesDashboard.css'
 import ResultsEntryModal from '../../components/hematology/ResultsEntryModal'
+import { getToken } from '../../utls'
 
 // Action to add sample to queue
 export async function action({ request }) {
-    const token = localStorage.getItem('token')
+    const token = getToken()
     const formData = await request.formData()
     const sampleId = formData.get('sampleId')
     const accessionNumber = formData.get('accessionNumber')
@@ -87,7 +88,7 @@ export default function SamplesDashboard() {
         setModalAnalytes(null)
         
         try {
-            const token = localStorage.getItem('token')
+            const token = getToken()
             const testName = encodeURIComponent(sample.test_name)
             const url = `http://127.0.0.1:8000/api/hematology/analytes/?test_name=${testName}`
             
@@ -137,7 +138,7 @@ export default function SamplesDashboard() {
     const checkSampleResults = async (sampleId) => {
         setCheckingResults(prev => ({ ...prev, [sampleId]: true }))
         try {
-            const token = localStorage.getItem('token')
+            const token = getToken()
             const response = await fetch(
                 `http://127.0.0.1:8000/api/hematology/samples/${sampleId}/results/`,
                 {

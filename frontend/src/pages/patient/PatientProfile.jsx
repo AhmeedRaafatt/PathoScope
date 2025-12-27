@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Calendar, Heart, Edit2, Save, X } from 'lucide-react';
 import '../../styles/patient/Patient.css';
+import { getToken } from '../../utls';
 
 // Note: We're not using a React Router action here because forms don't natively support PUT
 // Instead, we'll handle the submission in the component
@@ -25,7 +26,7 @@ const PatientProfile = () => {
     setIsSubmitting(true);
     setAlertMessage(null);
 
-    const token = localStorage.getItem('token');
+    const token = getToken();
     
     const profileData = {
       email: formData.email,

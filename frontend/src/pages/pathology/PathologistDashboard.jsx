@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import { faList, faUpload, faTimes, faMicroscope, faUserMd } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { getToken, getUsername } from '../../utls';
 
 const PathologistDashboard = () => {
     const [cases, setCases] = useState([]);
@@ -12,7 +13,7 @@ const PathologistDashboard = () => {
     const navigate = useNavigate();
 
     // Get the logged-in username for the header
-    const username = localStorage.getItem('username') || 'Pathologist';
+    const username = getUsername() || 'Pathologist';
 
     // Sidebar Configuration
     const features = [
@@ -25,7 +26,7 @@ const PathologistDashboard = () => {
 
     const fetchCases = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const response = await fetch('http://127.0.0.1:8000/api/pathology/list/', {
                 headers: { 'Authorization': `Token ${token}` }
             });
@@ -181,7 +182,7 @@ const UploadModal = ({ onClose, onUploadSuccess }) => {
     const handleUpload = async (e) => {
         e.preventDefault();
         setUploading(true);
-        const token = localStorage.getItem('token');
+        const token = getToken();
 
         const formData = new FormData();
         formData.append('patient', patientId);

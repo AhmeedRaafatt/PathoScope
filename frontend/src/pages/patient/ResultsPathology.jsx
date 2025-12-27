@@ -324,7 +324,7 @@ const ResultsPathology = () => {
                 </h4>
                 
                 <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                  {/* View Full Report Button - Primary Action */}
+                                  {/* View Full Report Button - Primary Action */}
                   {selectedTest.pathology_case_id && (
                     <div style={{
                       padding: '1.25rem',
@@ -343,7 +343,7 @@ const ResultsPathology = () => {
                         </p>
                       </div>
                       <button 
-                        onClick={() => window.open(`/pathology/report/${selectedTest.pathology_case_id}`, '_blank')}
+                        onClick={() => window.open(`/patient/results/pathology/report/${selectedTest.pathology_case_id}`, '_blank')}
                         style={{
                           padding: '0.75rem 1.5rem',
                           background: 'white',
@@ -385,10 +385,14 @@ const ResultsPathology = () => {
                         </p>
                       </div>
                       <div style={{display: 'flex', gap: '0.5rem'}}>
-                        {selectedTest.report_url ? (
+                        {(selectedTest.report_pdf_url || selectedTest.report_url) ? (
                           <>
                             <button 
-                              onClick={() => window.open(selectedTest.report_url, '_blank')}
+                              onClick={() => {
+                                const pdfUrl = selectedTest.report_pdf_url || selectedTest.report_url;
+                                const fullUrl = pdfUrl.startsWith('http') ? pdfUrl : `http://127.0.0.1:8000${pdfUrl}`;
+                                window.open(fullUrl, '_blank');
+                              }}
                               style={{
                                 padding: '0.5rem 1rem',
                                 background: '#5B65DC',
@@ -406,13 +410,12 @@ const ResultsPathology = () => {
                               <Eye size={16} />
                               View PDF
                             </button>
-                            <button 
-                              onClick={() => {
-                                const link = document.createElement('a');
-                                link.href = selectedTest.report_url;
-                                link.download = `Pathology_Report_${selectedTest.accession_number || selectedTest.test_name}.pdf`;
-                                link.click();
-                              }}
+                            <a 
+                              href={(() => {
+                                const pdfUrl = selectedTest.report_pdf_url || selectedTest.report_url;
+                                return pdfUrl.startsWith('http') ? pdfUrl : `http://127.0.0.1:8000${pdfUrl}`;
+                              })()}
+                              download={`Pathology_Report_${selectedTest.accession_number || selectedTest.test_name}.pdf`}
                               style={{
                                 padding: '0.5rem 1rem',
                                 background: 'white',
@@ -424,12 +427,13 @@ const ResultsPathology = () => {
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem'
+                                gap: '0.5rem',
+                                textDecoration: 'none'
                               }}
                             >
                               <Download size={16} />
                               Download
-                            </button>
+                            </a>
                           </>
                         ) : (
                           <span style={{fontSize: '0.875rem', color: '#9ca3af', fontStyle: 'italic'}}>

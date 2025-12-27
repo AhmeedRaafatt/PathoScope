@@ -14,6 +14,7 @@ import {
   faSignInAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/admin/AuditLogs.css";
+import { getToken } from "../../utls";
 
 export default function AuditLogs() {
   const [logs, setLogs] = useState([]);
@@ -45,7 +46,7 @@ export default function AuditLogs() {
   const fetchAuditLogs = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const params = new URLSearchParams();
 
       if (searchTerm) params.append("search", searchTerm);
@@ -84,7 +85,7 @@ export default function AuditLogs() {
 
   const handleExportLogs = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const params = new URLSearchParams();
 
       if (searchTerm) params.append("search", searchTerm);

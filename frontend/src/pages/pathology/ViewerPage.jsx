@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DicomCanvas from '../../components/pathology/DicomCanvas';
+import { getToken } from '../../utls';
 import { commonICD10Codes } from '../../data/icd10_codes';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -53,7 +54,7 @@ const ViewerPage = () => {
     useEffect(() => {
         const fetchCaseDetails = async () => {
             try {
-                const token = localStorage.getItem('token');
+                const token = getToken();
                 const response = await fetch('http://127.0.0.1:8000/api/pathology/list/', {
                     headers: { 'Authorization': `Token ${token}` }
                 });
@@ -91,7 +92,7 @@ const ViewerPage = () => {
     // Fetch Volume Information for MPR
     const fetchVolumeInfo = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const response = await fetch(`http://127.0.0.1:8000/api/pathology/case/${id}/mpr/info/`, {
                 headers: { 'Authorization': `Token ${token}` }
             });
@@ -121,7 +122,7 @@ const ViewerPage = () => {
         if (!volumeInfo) return;
         setLoadingSlice(true);
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const url = `http://127.0.0.1:8000/api/pathology/case/${id}/mpr/slice/?plane=${plane}&index=${index}&wc=${windowSettings.center}&ww=${windowSettings.width}`;
             const response = await fetch(url, {
                 headers: { 'Authorization': `Token ${token}` }
@@ -161,7 +162,7 @@ const ViewerPage = () => {
     // AI Handler
     const handleAI = async () => {
         setIsSaving(true);
-        const token = localStorage.getItem('token');
+        const token = getToken();
         try {
             const response = await fetch(`http://127.0.0.1:8000/api/pathology/case/${id}/ai-analyze/`, {
                 method: 'POST',
@@ -210,7 +211,7 @@ const ViewerPage = () => {
         }
 
         setIsSaving(true);
-        const token = localStorage.getItem('token');
+        const token = getToken();
         try {
             const response = await fetch(`http://127.0.0.1:8000/api/pathology/case/${id}/update-report/`, {
                 method: 'POST',
@@ -1318,7 +1319,7 @@ const VolumeRenderer3D = ({ caseId, volumeInfo }) => {
         const fetchVolumeData = async () => {
             setLoadingVolume(true);
             try {
-                const token = localStorage.getItem('token');
+                const token = getToken();
                 const response = await fetch(
                     `http://127.0.0.1:8000/api/pathology/case/${caseId}/mpr/volume-data/?downsample=2`,
                     { headers: { 'Authorization': `Token ${token}` } }

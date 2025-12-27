@@ -3,12 +3,13 @@ import logo from "../../assets/logo.png"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHome, faUser, faCalendarCheck, faSquarePollHorizontal, faFileInvoiceDollar, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import "../../styles/patient/Patient.css"
+import { clearAuthData } from '../../utls'
 
 export default function PatientSidebar() {
     const location = useLocation()
     
     const handleLogout = () => {
-        localStorage.removeItem('token')
+        clearAuthData()
         window.location.href = '/login'
     }
 

@@ -3,10 +3,11 @@ import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarCheck, faUserCheck, faClipboardCheck, faClock } from '@fortawesome/free-solid-svg-icons'
 import '../../styles/pathology/ScheduledBiopsies.css'
+import { getToken } from '../../utls'
 
 // Action to handle sample accession (Check In)
 export async function action({ request }) {
-    const token = localStorage.getItem('token')
+    const token = getToken()
     const formData = await request.formData()
     const testOrderId = formData.get('testOrderId')
     const patientName = formData.get('patientName')
@@ -250,7 +251,7 @@ function UploadModal({ caseId, accessionNumber, onClose }) {
         setUploading(true)
         setError(null)
 
-        const token = localStorage.getItem('token')
+        const token = getToken()
         const formData = new FormData()
         formData.append('case_id', caseId)
         formData.append('dicom_file', file)

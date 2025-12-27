@@ -3,11 +3,13 @@ import logo from "../assets/logo.png"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import '../styles/hematology/Layout.css'
+import { clearAuthData } from '../utls'
+
 export default function Sidebar({ title, features, logoutPath = '/login' }) {
     const location = useLocation()
     
     const handleLogout = () => {
-        localStorage.removeItem('token')
+        clearAuthData()
         window.location.href = logoutPath
     }
 

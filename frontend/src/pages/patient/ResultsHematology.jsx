@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { FileText, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import '../../styles/patient/Results.css';
+import { getToken } from '../../utls';
 
 const ResultsHematology = () => {
   const context = useOutletContext();
@@ -56,7 +57,7 @@ const ResultsHematology = () => {
     setSampleResults([]);
     
     try {
-      const token = localStorage.getItem('token');
+      const token = getToken();
       if (!token) {
         throw new Error('Authentication required');
       }

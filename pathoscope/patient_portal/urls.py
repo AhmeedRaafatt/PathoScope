@@ -7,7 +7,8 @@ from .views import (
     AvailableTestsView,
     TestOrderListView,
     InvoiceListView,
-    PayInvoiceView
+    PayInvoiceView,
+    PatientPathologyCaseDetailView
 )
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     path('test-orders/', TestOrderListView.as_view(), name='test-orders'),
     path('invoices/', InvoiceListView.as_view(), name='invoices'),
     path('invoices/<int:invoice_id>/pay/', PayInvoiceView.as_view(), name='pay-invoice'),
+    path('pathology-case/<int:case_id>/', PatientPathologyCaseDetailView.as_view(), name='patient-pathology-case'),
 ]

@@ -1,14 +1,26 @@
 import { Outlet, redirect, useLoaderData, useRevalidator } from "react-router-dom"
 import { useState, useCallback, useEffect } from "react"
 import PathologySidebar from "../../components/PathologySidebar"
+import { getToken, getUserRole, clearAuthData } from "../../utls"
 import '../../styles/pathology/Layout.css'
 
-// Utility function to check authentication
+// Utility function to check authentication and role
 export function requireAuth() {
-    const token = localStorage.getItem('token')
+    const token = getToken()
+    const role = getUserRole()
+    
     if (!token) {
         throw redirect('/login')
     }
+    
+    // Only pathologist can access pathology
+    if (role !== 'pathologist') {
+        if (role === 'patient') throw redirect('/patient')
+        if (role === 'admin') throw redirect('/admin')
+        if (role === 'lab_tech') throw redirect('/hematology')
+        throw redirect('/login')
+    }
+    
     return token
 }
 
@@ -44,7 +56,7 @@ export async function loader() {
         // Check for auth errors
         const allResponses = [scheduledRes, queueRes]
         if (allResponses.some(r => r.status === 401 || r.status === 403)) {
-            localStorage.removeItem('token')
+            clearAuthData()
             throw redirect('/login')
         }
 

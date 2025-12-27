@@ -11,6 +11,7 @@ import {
     faMicroscope
 } from '@fortawesome/free-solid-svg-icons'
 import '../../styles/pathology/AllCases.css'
+import { getToken } from '../../utls'
 
 export default function AllCases() {
     const navigate = useNavigate()
@@ -28,7 +29,7 @@ export default function AllCases() {
     const fetchAllCases = async () => {
         setLoading(true)
         try {
-            const token = localStorage.getItem('token')
+            const token = getToken()
             const response = await fetch('http://127.0.0.1:8000/api/pathology/list/', {
                 headers: { 'Authorization': `Token ${token}` }
             })

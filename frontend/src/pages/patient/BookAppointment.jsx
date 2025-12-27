@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Form, redirect, useOutletContext, useNavigation, useActionData } from 'react-router-dom';
 import '../../styles/patient/Appoinments.css'
+import { getToken } from '../../utls';
 
 export async function action({ request }) {
   const formData = await request.formData();
-  const token = localStorage.getItem('token');
+  const token = getToken();
   
   const appointmentData = {
     date: formData.get('date'),

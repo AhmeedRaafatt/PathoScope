@@ -7,6 +7,7 @@ import {
     faFlask 
 } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/hematology/ResultsModal.css';
+import { getToken } from '../../utls';
 
 export default function ResultsEntryModal({ sample, onClose, onSuccess }) {
     const [analytes, setAnalytes] = useState([]);
@@ -24,7 +25,7 @@ export default function ResultsEntryModal({ sample, onClose, onSuccess }) {
 
     const fetchAnalytes = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             if (!token) throw new Error('Authentication token missing');
             const url = `http://127.0.0.1:8000/api/hematology/analytes/?test_name=${encodeURIComponent(sample.test_name)}`;
             const response = await fetch(url, {
@@ -125,7 +126,7 @@ export default function ResultsEntryModal({ sample, onClose, onSuccess }) {
                 value: parseFloat(value)
             }));
 
-            const token = localStorage.getItem('token');
+            const token = getToken();
             if (!token) throw new Error('Authentication token missing');
 
             const response = await fetch(

@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpload, faCheckCircle, faExclamationTriangle, faSpinner, faFolder, faFile, faFileArchive } from '@fortawesome/free-solid-svg-icons'
 import '../../styles/hematology/UploadSlides.css'
+import { getToken } from '../../utls'
 
 // Action to handle DICOM upload (single file, multiple files, folder, or ZIP)
 export async function action({ request }) {
-    const token = localStorage.getItem('token')
+    const token = getToken()
     const formData = await request.formData()
     const caseId = formData.get('caseId')
     const accessionNumber = formData.get('accessionNumber')
@@ -107,7 +108,7 @@ export default function UploadSlides() {
     const fetchPendingCases = async () => {
         setLoading(true)
         try {
-            const token = localStorage.getItem('token')
+            const token = getToken()
             const response = await fetch('http://127.0.0.1:8000/api/pathology/list/', {
                 headers: { 'Authorization': `Token ${token}` }
             })

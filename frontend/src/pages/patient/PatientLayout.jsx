@@ -2,12 +2,12 @@ import {Outlet, redirect} from "react-router-dom"
 import { useLoaderData } from "react-router-dom";
 import { useState, useCallback } from "react";
 import PatientSidebar from "../../components/patient/PatientSidebar"
-import { requireAuth } from "../../utls";
+import { requirePatientAuth, getToken } from "../../utls";
 import '../../styles/patient/Patient.css'
 
 export async function loader() {
-  await requireAuth()
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  await requirePatientAuth()
+  const token = getToken();
   const base = 'http://127.0.0.1:8000/api/patient-portal';
   const headers = { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` };
 
@@ -77,7 +77,7 @@ export async function loader() {
 
 // Helper to refetch patient portal data
 export async function refetchPatientData() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const token = getToken();
   const base = 'http://127.0.0.1:8000/api/patient-portal';
   const headers = { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` };
 

@@ -12,6 +12,7 @@ import {
   faCog,
 } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/admin/LabConfiguration.css";
+import { getToken } from "../../utls";
 
 export default function LabConfiguration() {
   const [analytes, setAnalytes] = useState([]);
@@ -32,7 +33,7 @@ export default function LabConfiguration() {
   const fetchAnalytes = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const params = new URLSearchParams();
 
       if (searchTerm) params.append("search", searchTerm);
@@ -63,7 +64,7 @@ export default function LabConfiguration() {
 
   const handleCreateAnalyte = async (analyteData) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const response = await fetch(
         "http://127.0.0.1:8000/api/admin/analytes/",
         {
@@ -90,7 +91,7 @@ export default function LabConfiguration() {
 
   const handleUpdateAnalyte = async (analyteData) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const response = await fetch(
         `http://127.0.0.1:8000/api/admin/analytes/${selectedAnalyte.id}/`,
         {
@@ -120,7 +121,7 @@ export default function LabConfiguration() {
     if (!selectedAnalyte) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const response = await fetch(
         `http://127.0.0.1:8000/api/admin/analytes/${selectedAnalyte.id}/`,
         {
@@ -469,7 +470,7 @@ function AnalyteModal({ title, analyte, onSubmit, onClose }) {
               name="unit"
               value={formData.unit}
               onChange={handleChange}
-              placeholder="e.g., cells/µL, mg/dL"
+              placeholder="e.g., cells/ï¿½L, mg/dL"
               className={errors.unit ? "error" : ""}
             />
             {errors.unit && (

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Calendar, Clock } from 'lucide-react';
 import '../../styles/patient/Appoinments.css'
+import { getToken } from '../../utls';
 
 const ViewAppointments = () => {
   const context = useOutletContext();
@@ -41,7 +42,7 @@ const ViewAppointments = () => {
   const confirmCancel = async () => {
     if (!toCancelId) return;
     setIsCancelling(true);
-    const token = localStorage.getItem('token');
+    const token = getToken();
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/patient-portal/appointments/${toCancelId}/cancel/`, {
         method: 'POST',

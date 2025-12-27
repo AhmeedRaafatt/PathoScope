@@ -10,6 +10,7 @@ import {
   faSignOutAlt,
   faUserShield,
 } from "@fortawesome/free-solid-svg-icons";
+import { getToken, getUserRole, clearAuthData } from "../../utls";
 import logo from "../../assets/logo.png";
 import "../../styles/admin/AdminLayout.css";
 
@@ -21,35 +22,18 @@ export default function AdminLayout() {
 
   // Authentication and Role Check
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userRole = localStorage.getItem("userRole");
+    const token = getToken();
+    const userRole = getUserRole();
     
     // Check if token exists and user role is admin
     if (!token || userRole !== "admin") {
       // Redirect to login if not authenticated or not admin
-      localStorage.clear();
+      clearAuthData();
       navigate("/login", { replace: true });
       setIsAuthorized(false);
     } else {
       setIsAuthorized(true);
     }
-  }, [navigate]);
-
-  // Listen for storage changes (when another tab logs in with different role)
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === "userRole") {
-        const newRole = e.newValue;
-        if (newRole !== "admin") {
-          // User logged in as different role in another tab
-          navigate("/login", { replace: true });
-          setIsAuthorized(false);
-        }
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
   }, [navigate]);
 
   const navItems = [
@@ -91,7 +75,7 @@ export default function AdminLayout() {
           <button
             className="logout-btn"
             onClick={() => {
-              localStorage.clear();
+              clearAuthData();
               navigate("/login", { replace: true });
             }}
           >

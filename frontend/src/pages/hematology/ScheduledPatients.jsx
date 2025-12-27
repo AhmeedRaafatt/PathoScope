@@ -2,10 +2,11 @@ import { useOutletContext, useActionData, useNavigation, Form } from 'react-rout
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarCheck, faUserCheck, faClipboardCheck, faClock } from '@fortawesome/free-solid-svg-icons'
 import '../../styles/hematology/ScheduledPatients.css'
+import { getToken } from '../../utls'
 
 // Action to handle sample accession (Check In) - Supports both types
 export async function action({ request }) {
-    const token = localStorage.getItem('token')
+    const token = getToken()
     const formData = await request.formData()
     const testOrderId = formData.get('testOrderId')
     const patientName = formData.get('patientName')

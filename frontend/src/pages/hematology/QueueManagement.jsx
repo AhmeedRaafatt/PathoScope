@@ -10,10 +10,11 @@ import {
     faStop
 } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/hematology/Queue.css';
+import { getToken } from '../../utls';
 
 // Action to complete processing
 export async function action({ request }) {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const formData = await request.formData();
     const sampleId = formData.get('sampleId');
     const accessionNumber = formData.get('accessionNumber');

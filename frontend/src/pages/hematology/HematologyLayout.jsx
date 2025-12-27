@@ -1,14 +1,26 @@
 import { Outlet, redirect, useLoaderData, useRevalidator } from "react-router-dom"
 import { useState, useCallback, useEffect } from "react"
 import HematologySidebar from "../../components/HematologySidebar"
+import { getToken, getUserRole, clearAuthData } from "../../utls"
 import '../../styles/hematology/Layout.css'
 
-// Utility function to check authentication
+// Utility function to check authentication and role
 export function requireAuth() {
-    const token = localStorage.getItem('token')
+    const token = getToken()
+    const role = getUserRole()
+    
     if (!token) {
         throw redirect('/login')
     }
+    
+    // Only lab_tech can access hematology
+    if (role !== 'lab_tech') {
+        if (role === 'patient') throw redirect('/patient')
+        if (role === 'admin') throw redirect('/admin')
+        if (role === 'pathologist') throw redirect('/pathology')
+        throw redirect('/login')
+    }
+    
     return token
 }
 
@@ -53,7 +65,7 @@ export async function loader() {
         // Check for auth errors
         const allResponses = [scheduledRes, dashboardRes, queueRes, analytesRes, pathScheduledRes]
         if (allResponses.some(r => r.status === 401 || r.status === 403)) {
-            localStorage.removeItem('token')
+            clearAuthData()
             throw redirect('/login')
         }
 

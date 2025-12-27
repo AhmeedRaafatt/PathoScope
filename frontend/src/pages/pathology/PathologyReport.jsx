@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPrint, faArrowLeft, faCheck, faSpinner, faExclamationTriangle, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { getToken } from '../../utls';
 
 const PathologyReport = () => {
     const { id } = useParams();
@@ -17,7 +18,7 @@ const PathologyReport = () => {
     }, [id]);
 
     const fetchCase = async () => {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         try {
             const res = await fetch(`http://127.0.0.1:8000/api/pathology/list/`, {
                 headers: { 'Authorization': `Token ${token}` }
@@ -85,7 +86,7 @@ const PathologyReport = () => {
         }
 
         setFinalizing(true);
-        const token = localStorage.getItem('token');
+        const token = getToken();
         
         try {
             const response = await fetch(`http://127.0.0.1:8000/api/pathology/case/${id}/finalize/`, {
