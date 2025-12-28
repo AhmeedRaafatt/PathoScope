@@ -1,0 +1,229 @@
+/* ============================================
+   SAMPLES DASHBOARD
+   ============================================ */
+
+.samples-dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ============================================
+   FILTER SECTION
+   ============================================ */
+
+.filter-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 10px 20px;
+    background-color: white;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    border-color: #5B65DC;
+    color: #5B65DC;
+    background-color: #f9fafb;
+}
+
+.filter-btn.active {
+    background-color: #5B65DC;
+    color: white;
+    border-color: #5B65DC;
+}
+
+/* ============================================
+   SAMPLES LIST
+   ============================================ */
+
+.samples-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+.sample-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.sample-card:hover {
+    box-shadow: 0 4px 12px rgba(91, 101, 220, 0.08);
+    border-color: #d1d5db;
+}
+
+/* Sample Header */
+.sample-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.sample-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    background: #eeeffd;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5B65DC;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.sample-info {
+    flex: 1;
+}
+
+.accession-number {
+    font-size: 16px;
+    font-weight: 600;
+    color: #122056;
+    margin: 0 0 4px 0;
+}
+
+.barcode {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
+    font-family: 'Courier New', monospace;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.status-badge.received {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.in_analysis {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.awaiting_validation {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.validated {
+    background-color: #eeeffd;
+    color: #5B65DC;
+}
+
+/* Sample Body */
+.sample-body {
+    padding: 16px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 14px;
+    color: #122056;
+    font-weight: 600;
+}
+
+/* Sample Footer */
+.sample-footer {
+    padding: 16px;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    background-color: #5B65DC;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-action:hover {
+    background-color: #4c51bf;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(91, 101, 220, 0.2);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .samples-list {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-buttons {
+        flex-direction: column;
+    }
+
+    .filter-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}

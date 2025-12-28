@@ -1,0 +1,395 @@
+/* ============================================
+   SCHEDULED PATIENTS PAGE
+   ============================================ */
+
+.scheduled-patients-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 20px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #122056;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-icon {
+    color: #5B65DC;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.btn-refresh {
+    padding: 10px 20px;
+    background-color: white;
+    color: #5B65DC;
+    border: 1px solid #5B65DC;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-refresh:hover:not(:disabled) {
+    background-color: #eeeffd;
+}
+
+.btn-refresh:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   ALERT MESSAGES
+   ============================================ */
+
+.alert {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.alert-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+/* ============================================
+   APPOINTMENTS SECTION
+   ============================================ */
+
+.appointments-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.section-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #122056;
+    margin: 0;
+}
+
+.date-badge {
+    padding: 6px 12px;
+    background-color: #eeeffd;
+    color: #5B65DC;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ============================================
+   PATIENTS GRID
+   ============================================ */
+
+.patients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.patient-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.patient-card:hover {
+    box-shadow: 0 4px 12px rgba(91, 101, 220, 0.08);
+    border-color: #d1d5db;
+}
+
+/* Card Header */
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.patient-icon {
+    width: 48px;
+    height: 48px;
+    background: #eeeffd;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5B65DC;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.patient-info {
+    flex: 1;
+}
+
+.patient-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #122056;
+    margin: 0 0 4px 0;
+}
+
+.appointment-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.time-icon {
+    font-size: 12px;
+}
+
+/* Card Body */
+.card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-label {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 14px;
+    color: #122056;
+    font-weight: 600;
+}
+
+.test-type-badge {
+    padding: 4px 10px;
+    background-color: #dbeafe;
+    color: #1e40af;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-badge.confirmed {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+/* Card Footer */
+.card-footer {
+    padding: 16px;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-accession {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: #5B65DC;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-accession:hover:not(:disabled) {
+    background-color: #4c51bf;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(91, 101, 220, 0.2);
+}
+
+.btn-accession:disabled {
+    background-color: #cbd5e0;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================
+   FUTURE APPOINTMENTS LIST
+   ============================================ */
+
+.future-appointments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.future-appointment-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.future-appointment-item:hover {
+    background: #f3f4f6;
+}
+
+.appointment-date-badge {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #122056;
+    white-space: nowrap;
+}
+
+.appointment-details {
+    flex: 1;
+}
+
+.appointment-details h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #122056;
+    margin: 0 0 4px 0;
+}
+
+.appointment-details p {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* ============================================
+   STATES
+   ============================================ */
+
+.loading-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.empty-icon {
+    font-size: 48px;
+    color: #d1d5db;
+    margin-bottom: 16px;
+}
+
+.empty-state p {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .btn-refresh {
+        width: 100%;
+    }
+
+    .patients-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .future-appointment-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .status-badge {
+        align-self: flex-start;
+    }
+}

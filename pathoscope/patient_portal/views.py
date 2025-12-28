@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from django.utils import timezone
 from .models import PatientProfile, Appointment, TestOrder, Invoice, TEST_PRICES
 from .serializers import PatientProfileSerializer, AppointmentSerializer, TestOrderSerializer, InvoiceSerializer
+from pathology.models import PathologyCase
 
 
 class PatientProfileView(generics.RetrieveUpdateAPIView):
@@ -123,3 +124,51 @@ class PayInvoiceView(APIView):
             return Response({'message': 'Payment successful'}, status=status.HTTP_200_OK)
         except Invoice.DoesNotExist:
             return Response({'error': 'Invoice not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class PatientPathologyCaseDetailView(APIView):
+    """
+    Patient-accessible endpoint to view finalized pathology case details.
+    Only returns data for finalized cases belonging to the requesting patient.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, case_id):
+        try:
+            # Get case that belongs to this patient and is finalized
+            case = PathologyCase.objects.get(
+                id=case_id,
+                patient=request.user,
+                is_finalized=True
+            )
+            
+            # Build response with all relevant case data
+            data = {
+                'id': case.id,
+                'accession_number': case.accession_number,
+                'status': case.status,
+                'body_part_examined': case.body_part_examined,
+                'uploaded_at': case.uploaded_at.isoformat() if case.uploaded_at else None,
+                'is_finalized': case.is_finalized,
+                'finalized_date': case.finalized_date.isoformat() if case.finalized_date else None,
+                'finalized_by_name': case.finalized_by.username if case.finalized_by else None,
+                'pathologist_notes': case.pathologist_notes,
+                'icd_code': case.icd_code,
+                'icd_description': case.icd_description,
+                'report_pdf_url': request.build_absolute_uri(case.report_pdf.url) if case.report_pdf else None,
+                'image_preview_url': request.build_absolute_uri(case.image_preview.url) if case.image_preview else None,
+                'is_volume': case.is_volume,
+                'modality': case.modality,
+                'series_description': case.series_description,
+                'patient_name': request.user.username,
+                # Include annotations for viewing
+                'annotations': case.annotations if case.annotations else [],
+            }
+            
+            return Response(data, status=status.HTTP_200_OK)
+            
+        except PathologyCase.DoesNotExist:
+            return Response(
+                {'error': 'Report not found or not yet finalized'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )

@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, Outlet, useOutletContext } from 'react-router-dom';
 import '../../styles/patient/Appoinments.css';
 
-const AppointmentsLayout = () => {
+const PatientAppoinmentsLayout = () => {
   const context = useOutletContext();
   
   return (
@@ -35,4 +35,4 @@ const AppointmentsLayout = () => {
   );
 };
 
-export default AppointmentsLayout;
+export default PatientAppoinmentsLayout;

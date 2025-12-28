@@ -1,0 +1,244 @@
+/* ============================================
+   UPLOAD SLIDES PAGE
+   ============================================ */
+
+.upload-slides-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ============================================
+   CASES GRID
+   ============================================ */
+
+.cases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 20px;
+}
+
+.upload-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.upload-card:hover {
+    box-shadow: 0 4px 12px rgba(91, 101, 220, 0.08);
+    border-color: #d1d5db;
+}
+
+/* Card Header */
+.upload-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.upload-card .case-icon {
+    width: 48px;
+    height: 48px;
+    background: #fef3c7;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d97706;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.upload-card .case-info {
+    flex: 1;
+}
+
+.upload-card .accession-number {
+    font-size: 16px;
+    font-weight: 600;
+    color: #122056;
+    margin: 0 0 4px 0;
+}
+
+.upload-card .patient-name {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.upload-card .status-badge.awaiting {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Card Body */
+.upload-card .card-body {
+    padding: 20px;
+}
+
+.upload-card .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.upload-card .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.upload-card .info-label {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.upload-card .info-value {
+    font-size: 14px;
+    color: #122056;
+    font-weight: 600;
+}
+
+.upload-card .info-value.barcode {
+    font-family: 'Courier New', monospace;
+}
+
+/* ============================================
+   FILE INPUT
+   ============================================ */
+
+.file-input-wrapper {
+    margin-bottom: 16px;
+}
+
+.file-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.file-label:hover {
+    background: #f3f4f6;
+    border-color: #5B65DC;
+    color: #5B65DC;
+}
+
+.file-input {
+    display: none;
+}
+
+/* File selected state */
+.file-label:has(~ .file-input:valid) {
+    background: #eeeffd;
+    border-color: #5B65DC;
+    color: #5B65DC;
+    border-style: solid;
+}
+
+/* ============================================
+   UPLOAD BUTTON
+   ============================================ */
+
+.btn-upload {
+    width: 100%;
+    padding: 12px 20px;
+    background: #5B65DC;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-upload:hover:not(:disabled) {
+    background: #4c51bf;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(91, 101, 220, 0.3);
+}
+
+.btn-upload:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.6;
+}
+
+/* ============================================
+   LOADING & EMPTY STATES
+   ============================================ */
+
+.loading-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.empty-icon {
+    font-size: 64px;
+    color: #d1d5db;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    color: #122056;
+    font-size: 20px;
+    margin: 0 0 8px 0;
+}
+
+.empty-state p {
+    color: #6b7280;
+    margin: 0;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .cases-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .upload-card .info-grid {
+        grid-template-columns: 1fr;
+    }
+}

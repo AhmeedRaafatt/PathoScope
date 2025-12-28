@@ -1,0 +1,34 @@
+.dicom-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    background-color: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dicom-toolbar {
+    background-color: #333;
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.dicom-toolbar button {
+    background: #555;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.dicom-toolbar button:hover {
+    background: #777;
+}
+
+.dicom-viewport {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+}

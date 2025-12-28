@@ -12,10 +12,11 @@ class TestAnalyteSerializer(serializers.ModelSerializer):
 class SampleSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='test_order.patient.username', read_only=True)
     test_name = serializers.CharField(source='test_order.test_name', read_only=True)
+    test_order_id = serializers.IntegerField(source='test_order.id', read_only=True)
     
     class Meta:
         model = Sample
-        fields = ['id', 'accession_number', 'barcode', 'status', 'patient_name', 'test_name', 
+        fields = ['id', 'accession_number', 'barcode', 'status', 'patient_name', 'test_name', 'test_order_id',
                   'accessioned_date', 'processing_started', 'processing_completed']
         read_only_fields = ['accession_number', 'barcode']
 

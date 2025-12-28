@@ -2,12 +2,12 @@ import {Outlet, redirect} from "react-router-dom"
 import { useLoaderData } from "react-router-dom";
 import { useState, useCallback } from "react";
 import PatientSidebar from "../../components/patient/PatientSidebar"
-import { requireAuth } from "../../utls";
+import { requirePatientAuth, getToken } from "../../utls";
 import '../../styles/patient/Patient.css'
 
 export async function loader() {
-  await requireAuth()
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  await requirePatientAuth()
+  const token = getToken();
   const base = 'http://127.0.0.1:8000/api/patient-portal';
   const headers = { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` };
 
@@ -35,6 +35,14 @@ export async function loader() {
   const invoices = await safeJson(invoicesRes);
   const availableTestsRaw = await safeJson(availableTestsRes);
   const availableSlots = await safeJson(availableSlotsRes);
+  // Fetch hematology samples for patient (if hematology app is present)
+  let hematologySamples = null;
+  try {
+    const hRes = await fetch('http://127.0.0.1:8000/api/hematology/dashboard/', { headers });
+    hematologySamples = await safeJson(hRes);
+  } catch (e) {
+    hematologySamples = null;
+  }
 
   // Convert TEST_PRICES mapping to a flat array usable by the frontend
   let available_tests = null;
@@ -62,22 +70,25 @@ export async function loader() {
     invoices,
     availableSlots,
     available_tests
+  ,
+    hematology_samples: hematologySamples
   };
 }
 
 // Helper to refetch patient portal data
 export async function refetchPatientData() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const token = getToken();
   const base = 'http://127.0.0.1:8000/api/patient-portal';
   const headers = { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` };
 
   try {
-    const [profileRes, appointmentsRes, testOrdersRes, invoicesRes, availableTestsRes] = await Promise.all([
+    const [profileRes, appointmentsRes, testOrdersRes, invoicesRes, availableTestsRes, hematologyRes] = await Promise.all([
       fetch(`${base}/profile/`, { headers }),
       fetch(`${base}/appointments/`, { headers }),
       fetch(`${base}/test-orders/`, { headers }),
       fetch(`${base}/invoices/`, { headers }),
       fetch(`${base}/available-tests/`, { headers }),
+      fetch('http://127.0.0.1:8000/api/hematology/dashboard/', { headers }).catch(() => ({ ok: false }))
     ]);
 
     const safeJson = async (res) => {
@@ -93,6 +104,7 @@ export async function refetchPatientData() {
     const testOrders = await safeJson(testOrdersRes);
     const invoices = await safeJson(invoicesRes);
     const availableTestsRaw = await safeJson(availableTestsRes);
+    const hematologySamplesRaw = await safeJson(hematologyRes);
 
     // parse available tests similar to loader
     let available_tests = null;
@@ -113,7 +125,7 @@ export async function refetchPatientData() {
       available_tests = null;
     }
 
-    return { profile, appointments, testOrders, invoices, available_tests };
+    return { profile, appointments, testOrders, invoices, available_tests, hematology_samples: hematologySamplesRaw };
   } catch (error) {
     console.error('Error refetching data:', error);
     return null;

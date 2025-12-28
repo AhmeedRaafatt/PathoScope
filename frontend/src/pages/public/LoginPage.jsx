@@ -1,4 +1,5 @@
 import { Form, Link, redirect, useActionData } from "react-router-dom"
+import { setAuthData } from "../../utls"
 import '../../styles/Login.css'
 import logo from "../../assets/logo.png"
 
@@ -19,23 +20,35 @@ export async function action({ request }) {
     const data = await response.json();
 
     if (response.ok) {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('username', data.username);
-      localStorage.setItem('role', data.role);
+      // 1. Store Credentials in sessionStorage (unique per tab)
+      setAuthData(data.token, data.username, data.role);
       console.log("Login successful:", data);
-      return redirect('/patient'); 
-      
+
+      // 2. Traffic Cop Logic - Redirect based on role
+      if (data.role === 'patient') {
+        return redirect('/patient');
+      } else if (data.role === 'admin') {
+        return redirect('/admin');
+      } else if (data.role === 'lab_tech') {
+        return redirect('/hematology');
+      } else if (data.role === 'pathologist') {
+        return redirect('/pathology');
+      } else {
+        // Fallback for unknown roles
+        return redirect('/');
+      }
+
     } else {
-      return { 
+      return {
         error: data.error || data.detail || "Invalid username or password. Please try again.",
-        status: response.status 
+        status: response.status
       };
     }
   } catch (error) {
     console.error("Network Error:", error);
-    return { 
+    return {
       error: "Could not connect to server. Please check your connection and try again.",
-      networkError: true 
+      networkError: true
     };
   }
 }
@@ -53,7 +66,7 @@ export default function LoginPage() {
 
           {/* Error Alert */}
           {actionData && actionData.error && (
-            <div className="alert alert-error">
+            <div className="alert alert-error" style={{ color: 'red', fontWeight: 'bold', marginBottom: '1rem' }}>
               {actionData.error}
             </div>
           )}
